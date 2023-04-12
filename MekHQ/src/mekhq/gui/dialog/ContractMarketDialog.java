@@ -121,6 +121,7 @@ public class ContractMarketDialog extends JDialog {
         contractView = null;
         JButton btnGenerate = new JButton();
         JButton btnRemove = new JButton();
+        JButton btnRemoveAll = new JButton();
         JButton btnAccept = new JButton();
         JButton btnClose = new JButton();
 
@@ -410,6 +411,18 @@ public class ContractMarketDialog extends JDialog {
             ((DefaultTableModel) tableContracts.getModel()).removeRow(tableContracts.convertRowIndexToModel(tableContracts.getSelectedRow()));
         });
         panelOKBtns.add(btnRemove, new GridBagConstraints());
+
+        btnRemoveAll.setText(resourceMap.getString("btnRemoveAll.text"));
+        btnRemoveAll.setName("btnRemoveAll");
+        btnRemoveAll.addActionListener(evt -> {
+            contractMarket.removeAllContracts();
+            while (tableContracts.getRowCount() > 0){
+                ((DefaultTableModel) tableContracts.getModel()).removeRow(0);
+            }
+            refreshContractView();
+        });
+        panelOKBtns.add(btnRemoveAll, new GridBagConstraints());
+
 
         btnAccept.setText(resourceMap.getString("btnAccept.text"));
         btnAccept.setName("btnAccept");
