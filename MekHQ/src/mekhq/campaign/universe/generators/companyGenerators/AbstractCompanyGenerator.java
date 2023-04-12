@@ -1472,6 +1472,7 @@ public abstract class AbstractCompanyGenerator {
                     .plus(calculateArmourCosts(armour))
                     .plus(calculateAmmunitionCosts(ammunition));
 
+            LogManager.getLogger().info("Starting Cash: " + startingCash);
             // Determine the maximum costs before a loan needs to be taken, and determine the
             // starting cash based on it.
             final Money maximumPreLoanCosts = startingCash.minus(minimumStartingFloat);
