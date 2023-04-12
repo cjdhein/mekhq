@@ -1465,12 +1465,21 @@ public abstract class AbstractCompanyGenerator {
         }
 
         if (getOptions().isPayForSetup()) {
+            final Money hiringCosts = calculateHiringCosts(campaign, trackers);
+            final Money unitCosts = calculateUnitCosts(units);
+            final Money partCosts = calculatePartCosts(parts);
+            final Money armourCosts = calculateArmourCosts(armour);
+            final Money ammunitionCosts = calculateAmmunitionCosts(ammunition);
+
+            LogManager.getLogger().info("Starting Cash: " + startingCash);
+
             // Calculate the total costs of setup
-            final Money costs = calculateHiringCosts(campaign, trackers)
-                    .plus(calculateUnitCosts(units))
-                    .plus(calculatePartCosts(parts))
-                    .plus(calculateArmourCosts(armour))
-                    .plus(calculateAmmunitionCosts(ammunition));
+            final Money costs = hiringCosts.plus(unitCosts).plus(partCosts).plus(armourCosts).plus(ammunitionCosts);
+
+            LogManager.getLogger().info(
+                String.format("Hiring: %s\n Unit: %s\n Part: %s\nArmour: %s\nAmmo: %s\n\nTotal: %s",
+                    hiringCosts, unitCosts, partCosts, armourCosts, ammunitionCosts, costs)
+            );
 
             // Determine the maximum costs before a loan needs to be taken, and determine the
             // starting cash based on it.
