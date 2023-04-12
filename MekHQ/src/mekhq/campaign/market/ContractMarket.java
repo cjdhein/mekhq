@@ -109,6 +109,13 @@ public class ContractMarket {
         followupContracts.remove(c.getId());
     }
 
+    public void removeAllContracts() {
+        while(contracts.size() > 0){
+            removeContract(contracts.get(0));
+
+        }
+    }
+
     public AtBContract addAtBContract(Campaign campaign) {
         AtBContract c = generateAtBContract(campaign, campaign.getUnitRatingMod());
         if (c != null) {
