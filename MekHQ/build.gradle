@@ -61,9 +61,9 @@ dependencies {
 mainClassName = 'mekhq.MekHQ'
 
 ext {
-    mmJvmOptions = ['-Xmx2048m', '--add-opens', 'java.base/java.util=ALL-UNNAMED', '--add-opens', 'java.base/java.util.concurrent=ALL-UNNAMED']
+    mmJvmOptions = ['-Dsun.java2d.opengl=true','-Xmx4096m', '--add-opens', 'java.base/java.util=ALL-UNNAMED', '--add-opens', 'java.base/java.util.concurrent=ALL-UNNAMED']
     mmlJvmOptions = ['-Xmx1024m']
-    mhqJvmOptions = ['-Xmx2048m', '--add-opens', 'java.base/java.util=ALL-UNNAMED', '--add-opens', 'java.base/java.util.concurrent=ALL-UNNAMED']
+    mhqJvmOptions = ['-Dsun.java2d.opengl=true','-Xmx2048m', '--add-opens', 'java.base/java.util=ALL-UNNAMED', '--add-opens', 'java.base/java.util.concurrent=ALL-UNNAMED']
     campaigns = 'campaigns'
     data = 'data'
     docs = 'docs'
