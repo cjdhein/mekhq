@@ -14,7 +14,7 @@
     </gameoption>
     <gameoption>
         <optionname>year</optionname>
-        <optionvalue>3028</optionvalue>
+        <optionvalue>3033</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>simultaneous_movement</optionname>
@@ -38,7 +38,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_bap</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>stratops_harjel</optionname>
@@ -94,7 +94,7 @@
     </gameoption>
     <gameoption>
         <optionname>on_map_predesignate</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>autosave_msg</optionname>
@@ -126,11 +126,11 @@
     </gameoption>
     <gameoption>
         <optionname>psr_jump_heavy_woods</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>canon_only</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>use_bv_ratio</optionname>
@@ -182,7 +182,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_sprint</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>vtol_strafing</optionname>
@@ -222,7 +222,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_dig_in</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>ghost_target_max</optionname>
@@ -274,7 +274,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_partial_cover</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>maxtech_movement_mods</optionname>
@@ -290,11 +290,11 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_crit_roll</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>indirect_always_possible</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>stratops_partialrepairs</optionname>
@@ -358,7 +358,7 @@
     </gameoption>
     <gameoption>
         <optionname>single_blind_bots</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>indirect_fire</optionname>
@@ -366,11 +366,11 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_inf_pave_bonus</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>no_night_move_pen</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_retractable_blades</optionname>
@@ -378,7 +378,7 @@
     </gameoption>
     <gameoption>
         <optionname>double_blind</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_attack_physical_psr</optionname>
@@ -434,11 +434,11 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_falling_expanded</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_ams</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>manei_domini</optionname>
@@ -446,7 +446,7 @@
     </gameoption>
     <gameoption>
         <optionname>auto_abandon_unit</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_leaping</optionname>
@@ -466,7 +466,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_LOS1</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>stratops_quirks</optionname>
@@ -486,7 +486,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_take_cover</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>auto_ams</optionname>
@@ -562,7 +562,7 @@
     </gameoption>
     <gameoption>
         <optionname>vehicles_can_eject</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_ba_weight</optionname>
@@ -570,7 +570,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_range</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>pilots_visual_range_one</optionname>
@@ -634,7 +634,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_vehicle_arcs</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>simultaneous_physical</optionname>
@@ -690,11 +690,11 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_standing_still</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_skin_of_the_teeth_ejection</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>paranoid_autosave</optionname>
@@ -710,7 +710,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_tank_crews</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>stratops_capital_fighter</optionname>
@@ -734,7 +734,7 @@
     </gameoption>
     <gameoption>
         <optionname>increased_ac_dmg</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>map_area_predesignate</optionname>
@@ -742,7 +742,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_charge_damage</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>woods_burn_down</optionname>
@@ -762,7 +762,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_los_range</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>assault_drop</optionname>
@@ -898,7 +898,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_fast_infantry_move</optionname>
-        <optionvalue>true</optionvalue>
+        <optionvalue>false</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>tacops_self_destruct</optionname>
@@ -942,7 +942,7 @@
     </gameoption>
     <gameoption>
         <optionname>tacops_leg_damage</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>achieve_conditions</optionname>
@@ -974,7 +974,7 @@
     </gameoption>
     <gameoption>
         <optionname>case_pilot_damage</optionname>
-        <optionvalue>false</optionvalue>
+        <optionvalue>true</optionvalue>
     </gameoption>
     <gameoption>
         <optionname>paratroopers</optionname>
