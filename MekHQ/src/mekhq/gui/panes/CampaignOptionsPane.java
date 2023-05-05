@@ -1000,21 +1000,6 @@ public class CampaignOptionsPane extends AbstractMHQTabbedPane {
         gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
         panSubAcquire.add(chkSupportStaffOnly, gridBagConstraints);
 
-        JPanel pnlWaitingPeriod = new JPanel();
-        pnlWaitingPeriod.add(spnAcquireWaitingPeriod);
-        pnlWaitingPeriod.add(new JLabel(resources.getString("lblWaitingPeriod.text")));
-
-        gridBagConstraints = new GridBagConstraints();
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 3;
-        gridBagConstraints.weightx = 0.0;
-        gridBagConstraints.weighty = 0.0;
-        gridBagConstraints.gridwidth = 2;
-        gridBagConstraints.fill = GridBagConstraints.NONE;
-        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
-        panSubAcquire.add(pnlWaitingPeriod, gridBagConstraints);
-
-
         spnAcquireClanPenalty = new JSpinner(new SpinnerNumberModel(0, 0, 13, 1));
         ((DefaultEditor) spnAcquireClanPenalty.getEditor()).getTextField().setEditable(false);
 
@@ -1024,7 +1009,7 @@ public class CampaignOptionsPane extends AbstractMHQTabbedPane {
 
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 4;
+        gridBagConstraints.gridy = 3;
         gridBagConstraints.weightx = 0.0;
         gridBagConstraints.weighty = 0.0;
         gridBagConstraints.gridwidth = 2;
@@ -1041,7 +1026,7 @@ public class CampaignOptionsPane extends AbstractMHQTabbedPane {
 
         gridBagConstraints = new GridBagConstraints();
         gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 5;
+        gridBagConstraints.gridy = 4;
         gridBagConstraints.weightx = 0.0;
         gridBagConstraints.weighty = 0.0;
         gridBagConstraints.gridwidth = 2;
@@ -1049,6 +1034,20 @@ public class CampaignOptionsPane extends AbstractMHQTabbedPane {
         gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
         panSubAcquire.add(pnlIsPenalty, gridBagConstraints);
 
+        JPanel pnlWaitingPeriod = new JPanel();
+        pnlWaitingPeriod.add(spnAcquireWaitingPeriod);
+        pnlWaitingPeriod.add(new JLabel(resources.getString("lblWaitingPeriod.text")));
+
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 5;
+        gridBagConstraints.weightx = 0.0;
+        gridBagConstraints.weighty = 0.0;
+        gridBagConstraints.gridwidth = 5;
+        gridBagConstraints.fill = GridBagConstraints.NONE;
+        gridBagConstraints.anchor = GridBagConstraints.NORTHWEST;
+
+        panSubAcquire.add(pnlWaitingPeriod, gridBagConstraints);
         spnMaxAcquisitions = new JSpinner(new SpinnerNumberModel(0, 0, 100, 1));
         spnMaxAcquisitions.setName("spnMaxAcquisitions");
         spnMaxAcquisitions.setToolTipText(resources.getString("spnMaxAcquisitions.toolTipText"));
