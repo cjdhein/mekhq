@@ -415,6 +415,7 @@ public class ContractMarketDialog extends JDialog {
         btnRemoveAll.setText(resourceMap.getString("btnRemoveAll.text"));
         btnRemoveAll.setName("btnRemoveAll");
         btnRemoveAll.addActionListener(evt -> {
+            tableContracts.getSelectionModel().clearSelection();
             contractMarket.removeAllContracts();
             while (tableContracts.getRowCount() > 0){
                 ((DefaultTableModel) tableContracts.getModel()).removeRow(0);
