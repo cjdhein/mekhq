@@ -39,7 +39,6 @@ import mekhq.campaign.mission.Contract;
 import mekhq.campaign.parts.AmmoStorage;
 import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
-import mekhq.campaign.parts.equipment.AmmoBin;
 import mekhq.campaign.personnel.Person;
 import mekhq.campaign.personnel.Skill;
 import mekhq.campaign.personnel.SkillType;
@@ -54,15 +53,17 @@ import mekhq.campaign.universe.companyGeneration.CompanyGenerationPersonTracker;
 import mekhq.campaign.universe.enums.Alphabet;
 import mekhq.campaign.universe.enums.CompanyGenerationMethod;
 import mekhq.campaign.universe.enums.CompanyGenerationPersonType;
+import mekhq.campaign.universe.generators.ammunitionGenerators.BasicAmmunitionGenerator;
+import mekhq.campaign.universe.generators.armourGenerators.BasicArmourGenerator;
 import mekhq.campaign.universe.generators.battleMechQualityGenerators.AbstractBattleMechQualityGenerator;
 import mekhq.campaign.universe.generators.battleMechWeightClassGenerators.AbstractBattleMechWeightClassGenerator;
+import mekhq.campaign.universe.generators.partGenerators.AbstractPartGenerator;
 import mekhq.campaign.universe.selectors.factionSelectors.AbstractFactionSelector;
 import mekhq.campaign.universe.selectors.factionSelectors.DefaultFactionSelector;
 import mekhq.campaign.universe.selectors.factionSelectors.RangedFactionSelector;
 import mekhq.campaign.universe.selectors.planetSelectors.AbstractPlanetSelector;
 import mekhq.campaign.universe.selectors.planetSelectors.DefaultPlanetSelector;
 import mekhq.campaign.universe.selectors.planetSelectors.RangedPlanetSelector;
-import mekhq.campaign.work.WorkTime;
 import org.apache.logging.log4j.LogManager;
 
 import java.time.LocalDate;
@@ -1307,64 +1308,7 @@ public abstract class AbstractCompanyGenerator {
      * @return the generated armour
      */
     public List<Armor> generateArmour(final List<Unit> units) {
-        if (getOptions().getStartingArmourWeight() <= 0) {
-            return new ArrayList<>();
-        }
-
-        final List<Armor> unitAssignedArmour = units.stream()
-                .flatMap(unit -> unit.getParts().stream())
-                .filter(part -> part instanceof Armor)
-                .map(part -> (Armor) part)
-                .collect(Collectors.toList());
-        final List<Armor> armour = mergeIdenticalArmour(unitAssignedArmour);
-        final double armourTonnageMultiplier = getOptions().getStartingArmourWeight()
-                / armour.stream().mapToDouble(Armor::getTonnage).sum();
-        armour.forEach(a -> a.setAmount(Math.toIntExact(Math.round(a.getAmount() * armourTonnageMultiplier))));
-        return armour;
-    }
-
-    /**
-     * This clones and merges armour determined by the custom check below together
-     * @param unmergedArmour the unmerged list of armour, which may be assigned to a unit
-     * @return the merged list of armour
-     */
-    private List<Armor> mergeIdenticalArmour(final List<Armor> unmergedArmour) {
-        final List<Armor> mergedArmour = new ArrayList<>();
-        unmergedArmour.forEach(armour -> {
-            boolean unmerged = true;
-            for (final Armor a : mergedArmour) {
-                if (areSameArmour(a, armour)) {
-                    a.addAmount(armour.getAmount());
-                    unmerged = false;
-                    break;
-                }
-            }
-
-            if (unmerged) {
-                final Armor a = armour.clone();
-                a.setMode(WorkTime.NORMAL);
-                a.setOmniPodded(false);
-                mergedArmour.add(a);
-            }
-        });
-        return mergedArmour;
-    }
-
-    /**
-     * This is a custom equals comparison utilized by this class to determine if two Armour Parts
-     * are the same
-     * @param a1 the first Armour part
-     * @param a2 the second Armour part
-     * @return whether this class considers both types of Armour to be the same. This DIFFERS
-     * from Armor::equals
-     */
-    private boolean areSameArmour(final Armor a1, final Armor a2) {
-        return (a1.getClass() == a2.getClass())
-                && a1.isSameType(a2)
-                && (a1.isClan() == a2.isClan())
-                && (a1.getQuality() == a2.getQuality())
-                && (a1.getHits() == a2.getHits())
-                && (a1.getSkillMin() == a2.getSkillMin());
+        return BasicArmourGenerator.generateArmour(units, getOptions().getStartingArmourWeight());
     }
 
     /**
@@ -1373,45 +1317,10 @@ public abstract class AbstractCompanyGenerator {
      * @return the generated ammunition
      */
     public List<AmmoStorage> generateAmmunition(final Campaign campaign, final List<Unit> units) {
-        if (!getOptions().isGenerateSpareAmmunition() || ((getOptions().getNumberReloadsPerWeapon() <= 0)
-                && !getOptions().isGenerateFractionalMachineGunAmmunition())) {
-            return new ArrayList<>();
-        }
-
-        final List<AmmoBin> ammoBins = units.stream()
-                .flatMap(unit -> unit.getParts().stream())
-                .filter(part -> part instanceof AmmoBin)
-                .map(part -> (AmmoBin) part)
-                .collect(Collectors.toList());
-
-        final List<AmmoStorage> ammunition = new ArrayList<>();
-        final boolean generateReloads = getOptions().getNumberReloadsPerWeapon() > 0;
-        ammoBins.forEach(ammoBin -> {
-            if (getOptions().isGenerateFractionalMachineGunAmmunition() && ammoBinIsMachineGun(ammoBin)) {
-                ammunition.add(new AmmoStorage(0, ammoBin.getType(), 50, campaign));
-            } else if (generateReloads) {
-                ammunition.add(new AmmoStorage(0, ammoBin.getType(),
-                        ammoBin.getFullShots() * getOptions().getNumberReloadsPerWeapon(), campaign));
-            }
-        });
-
-        return ammunition;
+        return BasicAmmunitionGenerator.generateAmmunition(campaign, units, getOptions().isGenerateSpareAmmunition(),
+            getOptions().isGenerateFractionalMachineGunAmmunition(), getOptions().getNumberReloadsPerWeapon());
     }
 
-    /**
-     * @param ammoBin the ammo bin to check
-     * @return whether the ammo bin's ammo type is a machine gun type
-     */
-    private boolean ammoBinIsMachineGun(final AmmoBin ammoBin) {
-        switch (ammoBin.getType().getAmmoType()) {
-            case AmmoType.T_MG:
-            case AmmoType.T_MG_HEAVY:
-            case AmmoType.T_MG_LIGHT:
-                return true;
-            default:
-                return false;
-        }
-    }
     //endregion Spares
 
     //region Contract
@@ -1465,14 +1374,31 @@ public abstract class AbstractCompanyGenerator {
         }
 
         if (getOptions().isPayForSetup()) {
+            final Money hiringCosts = calculateHiringCosts(campaign, trackers);
+            final Money unitCosts = calculateUnitCosts(units);
+            final Money partCosts = calculatePartCosts(parts);
+            final Money armourCosts = calculateArmourCosts(armour);
+            final Money ammunitionCosts = calculateAmmunitionCosts(ammunition);
+
+            LogManager.getLogger().info("Starting Cash: " + startingCash);
+
             // Calculate the total costs of setup
             final Money costs = calculateHiringCosts(campaign, trackers)
                     .plus(calculateUnitCosts(units))
-                    .plus(calculatePartCosts(parts))
-                    .plus(calculateArmourCosts(armour))
-                    .plus(calculateAmmunitionCosts(ammunition));
+                    .plus(options.isPayForParts() ? AbstractPartGenerator.calculatePartCosts(parts) : Money.zero())
+                    .plus(options.isPayForArmour() ? BasicArmourGenerator.calculateArmourCosts(armour) : Money.zero())
+                    .plus(options.isPayForAmmunition() ? BasicAmmunitionGenerator.calculateAmmunitionCosts(ammunition) : Money.zero());
 
             LogManager.getLogger().info("Starting Cash: " + startingCash);
+
+            // Calculate the total costs of setup
+            final Money costs = hiringCosts.plus(unitCosts).plus(partCosts).plus(armourCosts).plus(ammunitionCosts);
+
+            LogManager.getLogger().info(
+                String.format("Hiring: %s\n Unit: %s\n Part: %s\nArmour: %s\nAmmo: %s\n\nTotal: %s",
+                    hiringCosts, unitCosts, partCosts, armourCosts, ammunitionCosts, costs)
+            );
+
             // Determine the maximum costs before a loan needs to be taken, and determine the
             // starting cash based on it.
             final Money maximumPreLoanCosts = startingCash.minus(minimumStartingFloat);
