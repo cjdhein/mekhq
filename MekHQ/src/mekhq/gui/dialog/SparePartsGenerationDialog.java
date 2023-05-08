@@ -20,33 +20,31 @@ package mekhq.gui.dialog;
 
 import megamek.client.ui.baseComponents.MMButton;
 import megamek.client.ui.enums.ValidationState;
-import megamek.common.Entity;
 import megamek.common.annotations.Nullable;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.event.OrganizationChangedEvent;
-import mekhq.campaign.mission.Contract;
+import mekhq.campaign.finances.Money;
+import mekhq.campaign.finances.enums.TransactionType;
 import mekhq.campaign.parts.AmmoStorage;
 import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.companyGeneration.SparePartsGenerationOptions;
-import mekhq.campaign.universe.companyGeneration.CompanyGenerationPersonTracker;
-import mekhq.campaign.universe.companyGeneration.SparePartsGenerationOptions;
-import mekhq.campaign.universe.generators.companyGenerators.AbstractCompanyGenerator;
-import mekhq.campaign.universe.generators.companyGenerators.WindchildCompanyGenerator;
+import mekhq.campaign.universe.enums.PartGenerationMethod;
+import mekhq.campaign.universe.generators.ammunitionGenerators.BasicAmmunitionGenerator;
+import mekhq.campaign.universe.generators.armourGenerators.BasicArmourGenerator;
+import mekhq.campaign.universe.generators.partGenerators.AbstractPartGenerator;
 import mekhq.gui.baseComponents.AbstractMHQValidationButtonDialog;
 import mekhq.gui.panels.SparePartsGenerationOptionsPanel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
-/**
- * This is currently just a temporary dialog over the SparePartsGenerationOptionsPanel.
- * Wave 5 will be when this gets redone to be far nicer and more customizable.
- * @author Justin "Windchild" Bowen
- */
+
 public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialog {
     //region Variable Declarations
     private Campaign campaign;
@@ -99,14 +97,11 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
 
     @Override
     protected JPanel createButtonPanel() {
-        final JPanel panel = new JPanel(new GridLayout(2, 3));
+        final JPanel panel = new JPanel(new GridLayout(1, 3));
 
         setOkButton(new MMButton("btnGenerate", resources, "Generate.text",
                 "CompanyGenerationDialog.btnGenerate.toolTipText", this::okButtonActionPerformed));
         panel.add(getOkButton());
-
-        panel.add(new MMButton("btnApply", resources, "Apply.text",
-                "CompanyGenerationDialog.btnApply.toolTipText", this::okButtonActionPerformed));
 
         panel.add(new MMButton("btnCancel", resources, "Cancel.text",
                 "Cancel.toolTipText", this::cancelActionPerformed));
@@ -115,14 +110,6 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
                 "CompanyGenerationDialog.btnRestore.toolTipText",
                 evt -> getSparePartsGenerationOptionsPanel().setOptions()));
 
-        panel.add(new MMButton("btnImport", resources, "Import.text",
-                "CompanyGenerationDialog.btnImport.toolTipText",
-                evt -> getSparePartsGenerationOptionsPanel().importOptionsFromXML()));
-
-        panel.add(new MMButton("btnExport", resources, "Export.text",
-                "CompanyGenerationDialog.btnExport.toolTipText",
-                evt -> getSparePartsGenerationOptionsPanel().exportOptionsToXML()));
-
         return panel;
     }
     //endregion Initialization
@@ -130,25 +117,36 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
     @Override
     protected void okAction() {
         final SparePartsGenerationOptions options = getSparePartsGenerationOptionsPanel().createOptionsFromPanel();
-        final AbstractCompanyGenerator generator = new WindchildCompanyGenerator(campaign, options)
+        final AbstractPartGenerator generator = options.getPartGenerationMethod().getGenerator();
+        final List<Unit> units;
+        final List<Part> parts;
+        final List<Armor> armour;
+        final List<AmmoStorage> ammunition;
 
-        final List<CompanyGenerationPersonTracker> trackers = generator.generatePersonnel(getCampaign());
-        generator.generateUnitGenerationParameters(trackers);
-        generator.generateEntities(getCampaign(), trackers);
-        final List<Unit> units = generator.applyPhaseOneToCampaign(getCampaign(), trackers);
+        units = campaign.getUnits().stream().collect(Collectors.toList());
+        if (options.getPartGenerationMethod() != PartGenerationMethod.DISABLED) {
+            parts = generator.generate(units, false, false);
+            parts.forEach(p -> campaign.getWarehouse().addPart(p, true));
+        } else {
+            parts = new ArrayList<>();
+        }
+        armour = BasicArmourGenerator.generateArmour(units, options.getStartingArmourWeight());
+        ammunition = BasicAmmunitionGenerator.generateAmmunition(getCampaign(), units, options.isGenerateSpareAmmunition(),
+            options.isGenerateFractionalMachineGunAmmunition(), options.getNumberReloadsPerWeapon());
 
-        final List<Entity> mothballedEntities = generator.generateMothballedEntities(getCampaign(), trackers);
-        final List<Part> parts = generator.generateSpareParts(units);
-        final List<Armor> armour = generator.generateArmour(units);
-        final List<AmmoStorage> ammunition = generator.generateAmmunition(getCampaign(), units);
-        units.addAll(generator.applyPhaseTwoToCampaign(getCampaign(), mothballedEntities, parts, armour, ammunition));
+        armour.forEach(a -> campaign.getWarehouse().addPart(a, true));
+        ammunition.forEach(a -> campaign.getWarehouse().addPart(a, true));
 
-        final Contract contract = null;
-        generator.applyPhaseThreeToCampaign(getCampaign(), trackers, units, parts, armour, ammunition, contract);
+        final Money costs = options.isPayForParts() ? AbstractPartGenerator.calculatePartCosts(parts) : Money.zero()
+            .plus(options.isPayForArmour() ? BasicArmourGenerator.calculateArmourCosts(armour) : Money.zero())
+            .plus(options.isPayForAmmunition() ? BasicAmmunitionGenerator.calculateAmmunitionCosts(ammunition) : Money.zero());
+
+        if (!costs.isZero()) {
+            campaign.getFinances().debit(TransactionType.EQUIPMENT_PURCHASE, campaign.getLocalDate(), costs, "Purchase of Spare Parts, Armour and Ammunition");
+        }
 
         MekHQ.triggerEvent(new OrganizationChangedEvent(getSparePartsGenerationOptionsPanel().getCampaign().getForces()));
     }
-
     @Override
     protected ValidationState validateAction(final boolean display) {
         return getSparePartsGenerationOptionsPanel().validateOptions(display);

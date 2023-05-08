@@ -19,7 +19,9 @@
 package mekhq.campaign.universe.generators.partGenerators;
 
 import mekhq.campaign.Warehouse;
+import mekhq.campaign.finances.Money;
 import mekhq.campaign.parts.Armor;
+import mekhq.campaign.parts.MissingPart;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.equipment.AmmoBin;
 import mekhq.campaign.unit.Unit;
@@ -63,7 +65,7 @@ public abstract class AbstractPartGenerator {
                                final boolean includeAmmunition) {
         final List<Part> parts = new ArrayList<>();
         units.forEach(unit -> unit.getParts().stream()
-                .filter(part -> (includeArmour || !(part instanceof Armor))
+                .filter(part -> !(part instanceof MissingPart) && (includeArmour || !(part instanceof Armor))
                         && (includeAmmunition || !(part instanceof AmmoBin)))
                 .forEach(parts::add));
         return generate(parts);
@@ -99,5 +101,17 @@ public abstract class AbstractPartGenerator {
         part.setMode(WorkTime.NORMAL);
         part.setOmniPodded(false);
         return part;
+    }
+
+    /**
+     * @param parts the list of parts to get the cost for
+     * @return the cost of the parts, or zero if you aren't paying for parts
+     */
+    public static Money calculatePartCosts(final List<Part> parts) {
+        Money partCosts = Money.zero();
+        for (final Part part : parts) {
+            partCosts = partCosts.plus(part.getActualValue());
+        }
+        return partCosts;
     }
 }

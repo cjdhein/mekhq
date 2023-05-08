@@ -962,6 +962,12 @@ public class CampaignGUI extends JPanel {
                 new CompanyGenerationDialog(getFrame(), getCampaign()).setVisible(true));
         menuManage.add(miCompanyGenerator);
 
+        //TODO: Move string to resources
+        JMenuItem miSparePartsGenerator = new JMenuItem("Standalone spare parts generator...");
+        miSparePartsGenerator.addActionListener(evt ->
+                new SparePartsGenerationDialog(getFrame(), getCampaign()).setVisible(true));
+        menuManage.add(miSparePartsGenerator);
+
         menuBar.add(menuManage);
         //endregion Manage Campaign Menu
 

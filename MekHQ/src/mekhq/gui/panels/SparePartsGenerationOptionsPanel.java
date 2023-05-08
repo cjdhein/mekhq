@@ -21,39 +21,25 @@ package mekhq.gui.panels;
 import megamek.client.ui.baseComponents.JDisableablePanel;
 import megamek.client.ui.baseComponents.MMComboBox;
 import megamek.client.ui.enums.ValidationState;
-import megamek.common.EntityWeightClass;
 import megamek.common.annotations.Nullable;
-import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.personnel.enums.PersonnelRole;
-import mekhq.campaign.universe.Factions;
-import mekhq.campaign.universe.companyGeneration.CompanyGenerationOptions;
 import mekhq.campaign.universe.companyGeneration.SparePartsGenerationOptions;
-import mekhq.campaign.universe.enums.*;
+import mekhq.campaign.universe.enums.PartGenerationMethod;
 import mekhq.gui.FileDialogs;
 import mekhq.gui.baseComponents.AbstractMHQScrollablePanel;
-import mekhq.gui.displayWrappers.FactionDisplay;
 
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
-import javax.swing.JSpinner.NumberEditor;
 import java.awt.*;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.TreeMap;
 
 /**
- * @author Justin "Windchild" Bowen
+ * @author cjdhein
  */
 public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     //region Variable Declarations
     private final Campaign campaign;
 
     // Spares
-    private JCheckBox chkGenerateMothballedSpareUnits;
-    private JSpinner spnSparesPercentOfActiveUnits;
     private MMComboBox<PartGenerationMethod> comboPartGenerationMethod;
     private JSpinner spnStartingArmourWeight;
     private JCheckBox chkGenerateSpareAmmunition;
@@ -73,8 +59,11 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         setTracksViewportWidth(false);
 
         initialize();
-
-        setOptions(sparePartsGenerationOptions);
+        if (sparePartsGenerationOptions == null) {
+            setOptions(new SparePartsGenerationOptions());
+        } else {
+            setOptions(sparePartsGenerationOptions);
+        }
     }
     //endregion Constructors
 
@@ -158,7 +147,7 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.NORTHWEST;
+        gbc.anchor = GridBagConstraints.NORTH;
         gbc.fill = GridBagConstraints.HORIZONTAL;
         add(createSparesPanel(), gbc);
         gbc.gridx = 0;
@@ -168,7 +157,6 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
 
     private JPanel createSparesPanel() {
         // Initialize Labels Used in ActionListeners
-        final JLabel lblSparesPercentOfActiveUnits = new JLabel();
         final JLabel lblNumberReloadsPerWeapon = new JLabel();
 
         // Create Panel Components
@@ -191,6 +179,11 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
             }
         });
 
+        getComboPartGenerationMethod().addActionListener(evt -> {
+            final boolean enabled = getComboPartGenerationMethod().isEnabled() && getComboPartGenerationMethod().getSelectedItem() != PartGenerationMethod.DISABLED;
+            getChkPayForParts().setEnabled(enabled);
+        });
+
         final JLabel lblStartingArmourWeight = new JLabel(resources.getString("lblStartingArmourWeight.text"));
         lblStartingArmourWeight.setToolTipText(resources.getString("lblStartingArmourWeight.toolTipText"));
         lblStartingArmourWeight.setName("lblStartingArmourWeight");
@@ -198,6 +191,10 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         setSpnStartingArmourWeight(new JSpinner(new SpinnerNumberModel(0, 0, 500, 1)));
         getSpnStartingArmourWeight().setToolTipText(resources.getString("lblStartingArmourWeight.toolTipText"));
         getSpnStartingArmourWeight().setName("spnStartingArmourWeight");
+        getSpnStartingArmourWeight().addChangeListener(evt -> {
+            final boolean enabled = getSpnStartingArmourWeight().isEnabled() && ((Integer) getSpnStartingArmourWeight().getValue()) > 0;
+            getChkPayForArmour().setEnabled(enabled);
+        });
 
         setChkGenerateSpareAmmunition(new JCheckBox(resources.getString("chkGenerateSpareAmmunition.text")));
         getChkGenerateSpareAmmunition().setToolTipText(resources.getString("chkGenerateSpareAmmunition.toolTipText"));
@@ -207,6 +204,7 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
             lblNumberReloadsPerWeapon.setEnabled(selected);
             getSpnNumberReloadsPerWeapon().setEnabled(selected);
             getChkGenerateFractionalMachineGunAmmunition().setEnabled(selected);
+            getChkPayForAmmunition().setEnabled(selected);
         });
 
         lblNumberReloadsPerWeapon.setText(resources.getString("lblNumberReloadsPerWeapon.text"));
@@ -222,13 +220,13 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         getChkGenerateFractionalMachineGunAmmunition().setName("chkGenerateFractionalMachineGunAmmunition");
 
         // Programmatically Assign Accessibility Labels
-     lblPartGenerationMethod.setLabelFor(getComboPartGenerationMethod());
+        lblPartGenerationMethod.setLabelFor(getComboPartGenerationMethod());
         lblStartingArmourWeight.setLabelFor(getSpnStartingArmourWeight());
         lblNumberReloadsPerWeapon.setLabelFor(getSpnNumberReloadsPerWeapon());
 
         // Disable Panel Portions by Default
         getChkGenerateSpareAmmunition().setSelected(true);
-        getChkGenerateSpareAmmunition().doClick();
+//        getChkGenerateSpareAmmunition().doClick();
 
         // Layout the UI
         final JPanel panel = new JPanel();
@@ -273,11 +271,10 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         return panel;
     }
 
-
     private JPanel createFinancesPanel() {
         // Initialize Components Used in ActionListeners
         final JPanel financialDebitsPanel = new JDisableablePanel("financialDebitsPanel");
-
+        financialDebitsPanel.setEnabled(true);
         createFinancialDebitsPanel(financialDebitsPanel);
 
         // Layout the UI
@@ -306,10 +303,6 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     private void createFinancialDebitsPanel(final JPanel panel) {
         // Create Panel Components
 
-        getChkPayForParts().setEnabled(true);
-        getChkPayForArmour().setEnabled(true);
-        getChkPayForAmmunition().setEnabled(true);
-
         setChkPayForParts(new JCheckBox(resources.getString("chkPayForParts.text")));
         getChkPayForParts().setToolTipText(resources.getString("chkPayForParts.toolTipText"));
         getChkPayForParts().setName("chkPayForParts");
@@ -321,6 +314,10 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         setChkPayForAmmunition(new JCheckBox(resources.getString("chkPayForAmmunition.text")));
         getChkPayForAmmunition().setToolTipText(resources.getString("chkPayForAmmunition.toolTipText"));
         getChkPayForAmmunition().setName("chkPayForAmmunition");
+
+        getChkPayForParts().setEnabled(true);
+        getChkPayForArmour().setEnabled(true);
+        getChkPayForAmmunition().setEnabled(true);
 
         // Disable Panel Portions by Default
         // This is handled by createFinancesPanel
@@ -350,6 +347,14 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     //endregion Initialization
 
     //region Options
+
+    /**
+     * Sets the options for this panel to the default for the selected CompanyGenerationMethod
+     */
+    public void setOptions() {
+        setOptions(new SparePartsGenerationOptions());
+    }
+
     /**
      * Sets the options for this panel based on the provided CompanyGenerationOptions
      * @param options the CompanyGenerationOptions to use
@@ -403,21 +408,4 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     }
     //endregion Options
 
-    //region File I/O
-    /**
-     * Imports CompanyGenerationOptions from an XML file
-     */
-    public void importOptionsFromXML() {
-        FileDialogs.openCompanyGenerationOptions(getFrame())
-                .ifPresent(file -> setOptions(SparePartsGenerationOptions.parseFromXML(file)));
-    }
-
-    /**
-     * Exports the CompanyGenerationOptions displayed on this panel to an XML file.
-     */
-    public void exportOptionsToXML() {
-        FileDialogs.saveCompanyGenerationOptions(getFrame())
-                .ifPresent(file -> createOptionsFromPanel().writeToFile(file));
-    }
-    //endregion File I/O
 }
