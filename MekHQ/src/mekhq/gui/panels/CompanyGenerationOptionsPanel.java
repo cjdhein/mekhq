@@ -112,6 +112,8 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     // Spares
     private JCheckBox chkGenerateMothballedSpareUnits;
     private JSpinner spnSparesPercentOfActiveUnits;
+
+    private InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel;
     private MMComboBox<PartGenerationMethod> comboPartGenerationMethod;
     private JSpinner spnStartingArmourWeight;
     private JCheckBox chkGenerateSpareAmmunition;
@@ -579,6 +581,14 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         this.spnSparesPercentOfActiveUnits = spnSparesPercentOfActiveUnits;
     }
 
+    public InventoryGenerationOptionsPanel getInventoryGenerationOptionsPanel() {
+        return inventoryGenerationOptionsPanel;
+    }
+
+    public void setInventoryGenerationOptionsPanel(InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel) {
+        this.inventoryGenerationOptionsPanel = inventoryGenerationOptionsPanel;
+    }
+
     public MMComboBox<PartGenerationMethod> getComboPartGenerationMethod() {
         return comboPartGenerationMethod;
     }
@@ -782,6 +792,8 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     //region Initialization
     @Override
     protected void initialize() {
+        setInventoryGenerationOptionsPanel(new InventoryGenerationOptionsPanel(getFrame(), getCampaign(), null));
+
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
         gbc.gridy = 0;
@@ -808,7 +820,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
 
         gbc.gridx = 0;
         gbc.gridy++;
-        add(createSparesPanel(), gbc);
+        add(createSparesPanel2(), gbc);
 
         gbc.gridx++;
         add(createContractsPanel(), gbc);
@@ -1495,6 +1507,68 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         }
     }
 
+    private JPanel createSparesPanel2() {
+        // Initialize Labels Used in ActionListeners
+        final JLabel lblSparesPercentOfActiveUnits = new JLabel();
+
+        // Create Panel Components
+        setChkGenerateMothballedSpareUnits(new JCheckBox(resources.getString("chkGenerateMothballedSpareUnits.text")));
+        getChkGenerateMothballedSpareUnits().setToolTipText(resources.getString("chkGenerateMothballedSpareUnits.toolTipText"));
+        getChkGenerateMothballedSpareUnits().setName("chkGenerateMothballedSpareUnits");
+        getChkGenerateMothballedSpareUnits().addActionListener(evt -> {
+            final boolean selected = getChkGenerateMothballedSpareUnits().isSelected();
+            lblSparesPercentOfActiveUnits.setEnabled(selected);
+            getSpnSparesPercentOfActiveUnits().setEnabled(selected);
+        });
+
+        lblSparesPercentOfActiveUnits.setText(resources.getString("lblSparesPercentOfActiveUnits.text"));
+        lblSparesPercentOfActiveUnits.setToolTipText(resources.getString("lblSparesPercentOfActiveUnits.toolTipText"));
+        lblSparesPercentOfActiveUnits.setName("lblSparesPercentOfActiveUnits");
+
+        setSpnSparesPercentOfActiveUnits(new JSpinner(new SpinnerNumberModel(0, 0, 100, 1)));
+        getSpnSparesPercentOfActiveUnits().setToolTipText(resources.getString("chkGenerateMothballedSpareUnits.toolTipText"));
+        getSpnSparesPercentOfActiveUnits().setName("spnGenerateMothballedSpareUnits");
+
+        // Programmatically Assign Accessibility Labels
+        lblSparesPercentOfActiveUnits.setLabelFor(getSpnSparesPercentOfActiveUnits());
+
+        // Disable Panel Portions by Default
+        getChkGenerateMothballedSpareUnits().setSelected(true);
+        getChkGenerateMothballedSpareUnits().doClick();
+        // Layout the UI
+        final JPanel panel = new JPanel();
+        panel.setBorder(BorderFactory.createTitledBorder(resources.getString("sparesPanel.title")));
+        panel.setName("sparesPanel");
+        final GroupLayout layout = new GroupLayout(panel);
+        panel.setLayout(layout);
+
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
+
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+                .addComponent(getChkGenerateMothballedSpareUnits())
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(lblSparesPercentOfActiveUnits)
+                    .addComponent(getSpnSparesPercentOfActiveUnits(), Alignment.LEADING))
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(getInventoryGenerationOptionsPanel())
+                )
+        );
+
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(Alignment.LEADING)
+                .addComponent(getChkGenerateMothballedSpareUnits())
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(lblSparesPercentOfActiveUnits)
+                    .addComponent(getSpnSparesPercentOfActiveUnits()))
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(getInventoryGenerationOptionsPanel())
+                )
+        );
+
+        return panel;
+    }
     private JPanel createSparesPanel() {
         // Initialize Labels Used in ActionListeners
         final JLabel lblSparesPercentOfActiveUnits = new JLabel();
@@ -2080,13 +2154,13 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
             getChkGenerateMothballedSpareUnits().doClick();
         }
         getSpnSparesPercentOfActiveUnits().setValue(options.getSparesPercentOfActiveUnits());
-        getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
-        getSpnStartingArmourWeight().setValue(options.getStartingArmourWeight());
-        if (getChkGenerateSpareAmmunition().isSelected() != options.isGenerateSpareAmmunition()) {
-            getChkGenerateSpareAmmunition().doClick();
+        getInventoryGenerationOptionsPanel().getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
+        getInventoryGenerationOptionsPanel().getSpnStartingArmourWeight().setValue(options.getStartingArmourWeight());
+        if (getInventoryGenerationOptionsPanel().getChkGenerateSpareAmmunition().isSelected() != options.isGenerateSpareAmmunition()) {
+            getInventoryGenerationOptionsPanel().getChkGenerateSpareAmmunition().doClick();
         }
-        getSpnNumberReloadsPerWeapon().setValue(options.getNumberReloadsPerWeapon());
-        getChkGenerateFractionalMachineGunAmmunition().setSelected(options.isGenerateFractionalMachineGunAmmunition());
+        getInventoryGenerationOptionsPanel().getSpnNumberReloadsPerWeapon().setValue(options.getNumberReloadsPerWeapon());
+        getInventoryGenerationOptionsPanel().getChkGenerateFractionalMachineGunAmmunition().setSelected(options.isGenerateFractionalMachineGunAmmunition());
 
         // Contracts
         if (getChkSelectStartingContract().isSelected() != options.isSelectStartingContract()) {
@@ -2206,11 +2280,12 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         // Spares
         options.setGenerateMothballedSpareUnits(getChkGenerateMothballedSpareUnits().isSelected());
         options.setSparesPercentOfActiveUnits((Integer) getSpnSparesPercentOfActiveUnits().getValue());
-        options.setPartGenerationMethod(getComboPartGenerationMethod().getSelectedItem());
-        options.setStartingArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
-        options.setGenerateSpareAmmunition(getChkGenerateSpareAmmunition().isSelected());
-        options.setNumberReloadsPerWeapon((Integer) getSpnNumberReloadsPerWeapon().getValue());
-        options.setGenerateFractionalMachineGunAmmunition(getChkGenerateFractionalMachineGunAmmunition().isSelected());
+        options.setInventoryGenerationOptions(getInventoryGenerationOptionsPanel().createOptionsFromPanel());
+//        options.setPartGenerationMethod(getComboPartGenerationMethod().getSelectedItem());
+//        options.setStartingArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
+//        options.setGenerateSpareAmmunition(getChkGenerateSpareAmmunition().isSelected());
+//        options.setNumberReloadsPerWeapon((Integer) getSpnNumberReloadsPerWeapon().getValue());
+//        options.setGenerateFractionalMachineGunAmmunition(getChkGenerateFractionalMachineGunAmmunition().isSelected());
 
         // Contracts
         options.setSelectStartingContract(getChkSelectStartingContract().isSelected());
@@ -2227,9 +2302,9 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         options.setPayForSetup(getChkPayForSetup().isSelected());
         options.setPayForPersonnel(getChkPayForPersonnel().isSelected());
         options.setPayForUnits(getChkPayForUnits().isSelected());
-        options.setPayForParts(getChkPayForParts().isSelected());
-        options.setPayForArmour(getChkPayForArmour().isSelected());
-        options.setPayForAmmunition(getChkPayForAmmunition().isSelected());
+//        options.setPayForParts(getChkPayForParts().isSelected());
+//        options.setPayForArmour(getChkPayForArmour().isSelected());
+//        options.setPayForAmmunition(getChkPayForAmmunition().isSelected());
 
         // Surprises
         options.setGenerateSurprises(getChkGenerateSurprises().isSelected());

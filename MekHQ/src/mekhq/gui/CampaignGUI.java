@@ -30,7 +30,6 @@ import megamek.client.ui.swing.dialog.AbstractUnitSelectorDialog;
 import megamek.client.ui.swing.util.UIUtil;
 import megamek.common.*;
 import megamek.common.annotations.Nullable;
-import megamek.common.enums.SkillLevel;
 import megamek.common.event.Subscribe;
 import megamek.common.loaders.EntityLoadingException;
 import mekhq.*;
@@ -963,10 +962,10 @@ public class CampaignGUI extends JPanel {
         menuManage.add(miCompanyGenerator);
 
         //TODO: Move string to resources
-        JMenuItem miSparePartsGenerator = new JMenuItem("Standalone spare parts generator...");
-        miSparePartsGenerator.addActionListener(evt ->
-                new SparePartsGenerationDialog(getFrame(), getCampaign()).setVisible(true));
-        menuManage.add(miSparePartsGenerator);
+        JMenuItem miInventoryGenerator = new JMenuItem(resourceMap.getString("miInventoryGenerator.text"));
+        miInventoryGenerator.addActionListener(evt ->
+                new InventoryGenerationDialog(getFrame(), getCampaign()).setVisible(true));
+        menuManage.add(miInventoryGenerator);
 
         menuBar.add(menuManage);
         //endregion Manage Campaign Menu
