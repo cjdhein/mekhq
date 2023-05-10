@@ -30,33 +30,32 @@ import mekhq.campaign.parts.AmmoStorage;
 import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
 import mekhq.campaign.unit.Unit;
-import mekhq.campaign.universe.companyGeneration.SparePartsGenerationOptions;
+import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
 import mekhq.campaign.universe.enums.PartGenerationMethod;
 import mekhq.campaign.universe.generators.ammunitionGenerators.BasicAmmunitionGenerator;
 import mekhq.campaign.universe.generators.armourGenerators.BasicArmourGenerator;
 import mekhq.campaign.universe.generators.partGenerators.AbstractPartGenerator;
 import mekhq.gui.baseComponents.AbstractMHQValidationButtonDialog;
-import mekhq.gui.panels.SparePartsGenerationOptionsPanel;
+import mekhq.gui.panels.InventoryGenerationOptionsPanel;
 
 import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 
 
-public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialog {
+public class InventoryGenerationDialog extends AbstractMHQValidationButtonDialog {
     //region Variable Declarations
     private Campaign campaign;
-    private SparePartsGenerationOptions sparePartsGenerationOptions;
-    private SparePartsGenerationOptionsPanel sparePartsGenerationOptionsPanel;
+    private InventoryGenerationOptions inventoryGenerationOptions;
+    private InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel;
     //endregion Variable Declarations
 
     //region Constructors
-    public SparePartsGenerationDialog(final JFrame frame, final Campaign campaign) {
-        super(frame, "CompanyGenerationDialog", "CompanyGenerationDialog.title");
+    public InventoryGenerationDialog(final JFrame frame, final Campaign campaign) {
+        super(frame, "InventoryGenerationDialog", "InventoryGenerationDialog.title");
         setCampaign(campaign);
-        setSparePartsGenerationOptions(null);
+        setInventoryGenerationOptions(null);
         initialize();
     }
     //endregion Constructors
@@ -70,29 +69,29 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
         this.campaign = campaign;
     }
 
-    public @Nullable SparePartsGenerationOptions getSparePartsGenerationOptions() {
-        return sparePartsGenerationOptions;
+    public @Nullable InventoryGenerationOptions getInventoryGenerationOptions() {
+        return inventoryGenerationOptions;
     }
 
-    public void setSparePartsGenerationOptions(final @Nullable SparePartsGenerationOptions sparePartsGenerationOptions) {
-        this.sparePartsGenerationOptions = sparePartsGenerationOptions;
+    public void setInventoryGenerationOptions(final @Nullable InventoryGenerationOptions inventoryGenerationOptions) {
+        this.inventoryGenerationOptions = inventoryGenerationOptions;
     }
 
-    public SparePartsGenerationOptionsPanel getSparePartsGenerationOptionsPanel() {
-        return sparePartsGenerationOptionsPanel;
+    public InventoryGenerationOptionsPanel getInventoryGenerationOptionsPanel() {
+        return inventoryGenerationOptionsPanel;
     }
 
-    public void setSparePartsGenerationOptionsPanel(final SparePartsGenerationOptionsPanel sparePartsGenerationOptionsPanel) {
-        this.sparePartsGenerationOptionsPanel = sparePartsGenerationOptionsPanel;
+    public void setInventoryGenerationOptionsPanel(final InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel) {
+        this.inventoryGenerationOptionsPanel = inventoryGenerationOptionsPanel;
     }
     //endregion Getters/Setters
 
     //region Initialization
     @Override
     protected Container createCenterPane() {
-        setSparePartsGenerationOptionsPanel(new SparePartsGenerationOptionsPanel(getFrame(), getCampaign(),
-                getSparePartsGenerationOptions()));
-        return new JScrollPane(getSparePartsGenerationOptionsPanel());
+        setInventoryGenerationOptionsPanel(new InventoryGenerationOptionsPanel(getFrame(), getCampaign(),
+                getInventoryGenerationOptions()));
+        return new JScrollPane(getInventoryGenerationOptionsPanel());
     }
 
     @Override
@@ -108,29 +107,34 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
 
         panel.add(new MMButton("btnRestore", resources, "RestoreDefaults.text",
                 "CompanyGenerationDialog.btnRestore.toolTipText",
-                evt -> getSparePartsGenerationOptionsPanel().setOptions()));
+                evt -> getInventoryGenerationOptionsPanel().setOptions(PartGenerationMethod.WINDCHILD)));
 
         return panel;
     }
     //endregion Initialization
 
+
+    /*TODO: Add generated parts to a temp warehouse and compare to current campaign warehouse and remove all items already in stock.
+            Then display a dialog with a table of all items and options to select which to order/add immediately.
+     */
     @Override
     protected void okAction() {
-        final SparePartsGenerationOptions options = getSparePartsGenerationOptionsPanel().createOptionsFromPanel();
-        final AbstractPartGenerator generator = options.getPartGenerationMethod().getGenerator();
+        final InventoryGenerationOptions options = getInventoryGenerationOptionsPanel().createOptionsFromPanel();
+
+        final AbstractPartGenerator generator = options.getPartGenerationMethod().getGenerator(options.getCustomPartGeneratorOptions());
         final List<Unit> units;
         final List<Part> parts;
         final List<Armor> armour;
         final List<AmmoStorage> ammunition;
 
-        units = campaign.getUnits().stream().collect(Collectors.toList());
+        units = new ArrayList<>(campaign.getUnits());
         if (options.getPartGenerationMethod() != PartGenerationMethod.DISABLED) {
             parts = generator.generate(units, false, false);
             parts.forEach(p -> campaign.getWarehouse().addPart(p, true));
         } else {
             parts = new ArrayList<>();
         }
-        armour = BasicArmourGenerator.generateArmour(units, options.getStartingArmourWeight());
+        armour = BasicArmourGenerator.generateArmour(units, options.getTargetArmourWeight());
         ammunition = BasicAmmunitionGenerator.generateAmmunition(getCampaign(), units, options.isGenerateSpareAmmunition(),
             options.isGenerateFractionalMachineGunAmmunition(), options.getNumberReloadsPerWeapon());
 
@@ -145,10 +149,10 @@ public class SparePartsGenerationDialog extends AbstractMHQValidationButtonDialo
             campaign.getFinances().debit(TransactionType.EQUIPMENT_PURCHASE, campaign.getLocalDate(), costs, "Purchase of Spare Parts, Armour and Ammunition");
         }
 
-        MekHQ.triggerEvent(new OrganizationChangedEvent(getSparePartsGenerationOptionsPanel().getCampaign().getForces()));
+        MekHQ.triggerEvent(new OrganizationChangedEvent(getInventoryGenerationOptionsPanel().getCampaign().getForces()));
     }
     @Override
     protected ValidationState validateAction(final boolean display) {
-        return getSparePartsGenerationOptionsPanel().validateOptions(display);
+        return getInventoryGenerationOptionsPanel().validateOptions(display);
     }
 }

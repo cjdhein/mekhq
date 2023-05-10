@@ -19,10 +19,8 @@
 package mekhq.campaign.universe.enums;
 
 import mekhq.MekHQ;
-import mekhq.campaign.universe.generators.partGenerators.AbstractPartGenerator;
-import mekhq.campaign.universe.generators.partGenerators.MishraPartGenerator;
-import mekhq.campaign.universe.generators.partGenerators.MultiplePartGenerator;
-import mekhq.campaign.universe.generators.partGenerators.WindchildPartGenerator;
+import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
+import mekhq.campaign.universe.generators.partGenerators.*;
 import org.apache.logging.log4j.LogManager;
 
 import java.util.ResourceBundle;
@@ -37,7 +35,8 @@ public enum PartGenerationMethod {
     MISHRA("PartGenerationMethod.MISHRA.text", "PartGenerationMethod.MISHRA.toolTipText"),
     SINGLE("PartGenerationMethod.SINGLE.text", "PartGenerationMethod.SINGLE.toolTipText"),
     DOUBLE("PartGenerationMethod.DOUBLE.text", "PartGenerationMethod.DOUBLE.toolTipText"),
-    TRIPLE("PartGenerationMethod.TRIPLE.text", "PartGenerationMethod.TRIPLE.toolTipText");
+    TRIPLE("PartGenerationMethod.TRIPLE.text", "PartGenerationMethod.TRIPLE.toolTipText"),
+    CUSTOM("PartGenerationMethod.CUSTOM.text", "PartGenerationMethod.CUSTOM.toolTipText");
     //endregion Enum Declarations
 
     //region Variable Declarations
@@ -84,9 +83,13 @@ public enum PartGenerationMethod {
     public boolean isTriple() {
         return this == TRIPLE;
     }
+
+    public boolean isCustom() {
+        return this == CUSTOM;
+    }
     //endregion Boolean Comparison Methods
 
-    public AbstractPartGenerator getGenerator() {
+    public AbstractPartGenerator getGenerator(CustomPartGeneratorOptions options) {
         switch (this) {
             case MISHRA:
                 return new MishraPartGenerator();
@@ -96,6 +99,8 @@ public enum PartGenerationMethod {
                 return new MultiplePartGenerator(this, 2);
             case TRIPLE:
                 return new MultiplePartGenerator(this, 3);
+            case CUSTOM:
+                return new CustomPartGenerator(this, options);
             case DISABLED:
                 LogManager.getLogger().error("Attempted to get a generator when the part generator is Disabled. Returning Windchild");
             case WINDCHILD:

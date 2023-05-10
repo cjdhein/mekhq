@@ -1300,7 +1300,7 @@ public abstract class AbstractCompanyGenerator {
      */
     public List<Part> generateSpareParts(final List<Unit> units) {
         return getOptions().getPartGenerationMethod().isDisabled() ? new ArrayList<>()
-                : getOptions().getPartGenerationMethod().getGenerator().generate(units, false, false);
+                : getOptions().getPartGenerationMethod().getGenerator(getOptions().getInventoryGenerationOptions().getCustomPartGeneratorOptions()).generate(units, false, false);
     }
 
     /**

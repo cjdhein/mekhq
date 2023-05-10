@@ -16,17 +16,13 @@
  * You should have received a copy of the GNU General Public License
  * along with MekHQ. If not, see <http://www.gnu.org/licenses/>.
  */
-package mekhq.campaign.universe.companyGeneration;
+package mekhq.campaign.universe.inventoryGeneration;
 
 import megamek.Version;
-import megamek.common.EntityWeightClass;
 import megamek.common.annotations.Nullable;
 import mekhq.MHQConstants;
-import mekhq.campaign.RandomOriginOptions;
-import mekhq.campaign.personnel.enums.PersonnelRole;
-import mekhq.campaign.universe.Faction;
-import mekhq.campaign.universe.Factions;
 import mekhq.campaign.universe.enums.*;
+import mekhq.campaign.universe.generators.partGenerators.CustomPartGeneratorOptions;
 import mekhq.utilities.MHQXMLUtility;
 import org.apache.logging.log4j.LogManager;
 import org.w3c.dom.Element;
@@ -35,21 +31,17 @@ import org.w3c.dom.NodeList;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.TreeMap;
 
 /**
- * @author Justin "Windchild" Bowen
+ * @author cjdhein
  */
-public class SparePartsGenerationOptions {
+public class InventoryGenerationOptions {
     //region Variable Declarations
 
     // Spares
     private PartGenerationMethod partGenerationMethod;
-    private int startingArmourWeight;
+    private CustomPartGeneratorOptions customPartGeneratorOptions;
+    private int targetArmourWeight;
     private boolean generateSpareAmmunition;
     private int numberReloadsPerWeapon;
     private boolean generateFractionalMachineGunAmmunition;
@@ -62,11 +54,12 @@ public class SparePartsGenerationOptions {
     //endregion Variable Declarations
 
     //region Constructors
-    public SparePartsGenerationOptions() {
+    public InventoryGenerationOptions(final PartGenerationMethod partGenerationMethod) {
 
         // Spares
-        setPartGenerationMethod(PartGenerationMethod.WINDCHILD);
-        setStartingArmourWeight(60);
+        setPartGenerationMethod(partGenerationMethod);
+        setCustomPartGeneratorOptions(new CustomPartGeneratorOptions());
+        setTargetArmourWeight(60);
         setGenerateSpareAmmunition(true);
         setNumberReloadsPerWeapon(4);
         setGenerateFractionalMachineGunAmmunition(true);
@@ -88,12 +81,20 @@ public class SparePartsGenerationOptions {
         this.partGenerationMethod = partGenerationMethod;
     }
 
-    public int getStartingArmourWeight() {
-        return startingArmourWeight;
+    public CustomPartGeneratorOptions getCustomPartGeneratorOptions() {
+        return customPartGeneratorOptions;
     }
 
-    public void setStartingArmourWeight(final int startingArmourWeight) {
-        this.startingArmourWeight = startingArmourWeight;
+    public void setCustomPartGeneratorOptions(CustomPartGeneratorOptions customPartGeneratorOptions) {
+        this.customPartGeneratorOptions = customPartGeneratorOptions;
+    }
+
+    public int getTargetArmourWeight() {
+        return targetArmourWeight;
+    }
+
+    public void setTargetArmourWeight(final int targetArmourWeight) {
+        this.targetArmourWeight = targetArmourWeight;
     }
 
     public boolean isGenerateSpareAmmunition() {
@@ -191,7 +192,7 @@ public class SparePartsGenerationOptions {
 
         // Spares
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "partGenerationMethod", getPartGenerationMethod().name());
-        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "startingArmourWeight", getStartingArmourWeight());
+        MHQXMLUtility.writeSimpleXMLTag(pw, indent, "startingArmourWeight", getTargetArmourWeight());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "generateSpareAmmunition", isGenerateSpareAmmunition());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "numberReloadsPerWeapon", getNumberReloadsPerWeapon());
         MHQXMLUtility.writeSimpleXMLTag(pw, indent, "generateFractionalMachineGunAmmunition", isGenerateFractionalMachineGunAmmunition());
@@ -209,10 +210,10 @@ public class SparePartsGenerationOptions {
      * @return the parsed CompanyGenerationOptions, or the default Windchild options if there is an
      * issue parsing the file.
      */
-    public static SparePartsGenerationOptions parseFromXML(final @Nullable File file) {
+    public static InventoryGenerationOptions parseFromXML(final @Nullable File file) {
         if (file == null) {
             LogManager.getLogger().error("Received a null file, returning the default Windchild options");
-            return new SparePartsGenerationOptions();
+            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
         }
         final Element element;
 
@@ -221,15 +222,15 @@ public class SparePartsGenerationOptions {
             element = MHQXMLUtility.newSafeDocumentBuilder().parse(is).getDocumentElement();
         } catch (Exception ex) {
             LogManager.getLogger().error("Failed to open file, returning the default Windchild options", ex);
-            return new SparePartsGenerationOptions();
+            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
         }
         element.normalize();
 
         final Version version = new Version(element.getAttribute("version"));
-        final SparePartsGenerationOptions options = parseFromXML(element.getChildNodes(), version);
+        final InventoryGenerationOptions options = parseFromXML(element.getChildNodes(), version);
         if (options == null) {
             LogManager.getLogger().error("Failed to parse file, returning the default Windchild options");
-            return new SparePartsGenerationOptions();
+            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
         } else {
             return options;
         }
@@ -240,8 +241,8 @@ public class SparePartsGenerationOptions {
      * @param version the Version of the XML to parse from
      * @return the parsed company generation options, or null if the parsing fails
      */
-    public static @Nullable SparePartsGenerationOptions parseFromXML(final NodeList nl,
-                                                                     final Version version) {
+    public static @Nullable InventoryGenerationOptions parseFromXML(final NodeList nl,
+                                                                    final Version version) {
         if (MHQConstants.VERSION.isLowerThan(version)) {
             LogManager.getLogger().error(String.format(
                     "Cannot parse Company Generation Options from %s in older version %s.",
@@ -249,7 +250,7 @@ public class SparePartsGenerationOptions {
             return null;
         }
 
-        final SparePartsGenerationOptions options = new SparePartsGenerationOptions();
+        final InventoryGenerationOptions options = new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
         try {
             for (int x = 0; x < nl.getLength(); x++) {
                 final Node wn = nl.item(x);
@@ -259,7 +260,7 @@ public class SparePartsGenerationOptions {
                         options.setPartGenerationMethod(PartGenerationMethod.valueOf(wn.getTextContent().trim()));
                         break;
                     case "startingArmourWeight":
-                        options.setStartingArmourWeight(Integer.parseInt(wn.getTextContent().trim()));
+                        options.setTargetArmourWeight(Integer.parseInt(wn.getTextContent().trim()));
                         break;
                     case "generateSpareAmmunition":
                         options.setGenerateSpareAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));

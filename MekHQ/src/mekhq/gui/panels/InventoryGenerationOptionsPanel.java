@@ -23,9 +23,9 @@ import megamek.client.ui.baseComponents.MMComboBox;
 import megamek.client.ui.enums.ValidationState;
 import megamek.common.annotations.Nullable;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.universe.companyGeneration.SparePartsGenerationOptions;
+import mekhq.campaign.universe.generators.partGenerators.CustomPartGeneratorOptions;
+import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
 import mekhq.campaign.universe.enums.PartGenerationMethod;
-import mekhq.gui.FileDialogs;
 import mekhq.gui.baseComponents.AbstractMHQScrollablePanel;
 
 import javax.swing.*;
@@ -35,9 +35,13 @@ import java.awt.*;
 /**
  * @author cjdhein
  */
-public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel {
+public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     //region Variable Declarations
     private final Campaign campaign;
+    private CustomPartGeneratorOptions customPartGeneratorOptions;
+    private JSpinner spnCustPartGenTargetMultiplier;
+    private CustomPartGeneratorOptionsPanel customPartGeneratorOptionsPanel;
+
 
     // Spares
     private MMComboBox<PartGenerationMethod> comboPartGenerationMethod;
@@ -52,17 +56,17 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     private JCheckBox chkPayForAmmunition;
 
     //region Constructors
-    public SparePartsGenerationOptionsPanel(final JFrame frame, final Campaign campaign,
-                                            final @Nullable SparePartsGenerationOptions sparePartsGenerationOptions) {
+    public InventoryGenerationOptionsPanel(final JFrame frame, final Campaign campaign,
+                                           final @Nullable InventoryGenerationOptions inventoryGenerationOptions) {
         super(frame, "SparePartsGenerationOptionsPanel", new GridBagLayout());
         this.campaign = campaign;
         setTracksViewportWidth(false);
 
         initialize();
-        if (sparePartsGenerationOptions == null) {
-            setOptions(new SparePartsGenerationOptions());
+        if (inventoryGenerationOptions == null) {
+            setOptions(new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD));
         } else {
-            setOptions(sparePartsGenerationOptions);
+            setOptions(inventoryGenerationOptions);
         }
     }
     //endregion Constructors
@@ -70,6 +74,29 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     //region Getters/Setters
     public Campaign getCampaign() {
         return campaign;
+    }
+
+    public CustomPartGeneratorOptionsPanel getCustomPartGeneratorOptionsPanel() {
+        return customPartGeneratorOptionsPanel;
+    }
+
+    public void setCustomPartGeneratorOptionsPanel(CustomPartGeneratorOptionsPanel customPartGeneratorOptionsPanel) {
+        this.customPartGeneratorOptionsPanel = customPartGeneratorOptionsPanel;
+    }
+
+//    public CustomPartGeneratorOptions getCustomPartGeneratorOptions() {
+//        return customPartGeneratorOptions;
+//    }
+//
+//    public void setCustomPartGeneratorOptions(CustomPartGeneratorOptions customPartGeneratorOptions) {
+//        this.customPartGeneratorOptions = customPartGeneratorOptions;
+//    }
+
+    public JSpinner getSpnCustPartGenTargetMultiplier() {
+        return spnCustPartGenTargetMultiplier;
+    }
+    public void setSpnCustPartGenTargetMultiplier(final JSpinner spnCustPartGenTargetMultiplier) {
+        this.spnCustPartGenTargetMultiplier = spnCustPartGenTargetMultiplier;
     }
 
     //region Spares
@@ -155,6 +182,46 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         add(createFinancesPanel(), gbc);
     }
 
+    private CustomPartGeneratorOptionsPanel createCustomPartGeneratorOptionsPanel() {
+        // Create Panel Components
+        final JLabel lblSparePartTargetMultiplier = new JLabel(resources.getString("lblSparePartTargetMultiplier.text"));
+        lblSparePartTargetMultiplier.setName("lblSparePartTargetMultiplier");
+        lblSparePartTargetMultiplier.setToolTipText(resources.getString("lblSparePartTargetMultiplier.toolTipText"));
+        setSpnCustPartGenTargetMultiplier(new JSpinner(new SpinnerNumberModel(0.1, 0.0, 100.0, 0.05)));
+        getSpnCustPartGenTargetMultiplier().setToolTipText(resources.getString("lblSparePartTargetMultiplier.toolTipText"));
+        getSpnCustPartGenTargetMultiplier().setName("spnCustPartGenTargetMultiplier");
+        // Programmatically Assign Accessibility Labels
+        lblSparePartTargetMultiplier.setLabelFor(getSpnCustPartGenTargetMultiplier());
+
+        // Layout the UI
+        final CustomPartGeneratorOptionsPanel panel = new CustomPartGeneratorOptionsPanel(getFrame(), getCampaign(), null);
+        panel.setBorder(BorderFactory.createTitledBorder(resources.getString("pnlCustomPartGeneratorOptions.title")));
+        panel.setName("pnlCustomPartGeneratorOptions");
+        final GroupLayout layout = new GroupLayout(panel);
+        panel.setLayout(layout);
+
+        layout.setAutoCreateGaps(true);
+        layout.setAutoCreateContainerGaps(true);
+
+        layout.setVerticalGroup(
+            layout.createSequentialGroup()
+                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                    .addComponent(lblSparePartTargetMultiplier)
+                    .addComponent(getSpnCustPartGenTargetMultiplier(), Alignment.LEADING))
+        );
+
+        layout.setHorizontalGroup(
+            layout.createParallelGroup(Alignment.LEADING)
+                .addGroup(layout.createSequentialGroup()
+                    .addComponent(lblSparePartTargetMultiplier)
+                    .addComponent(getSpnCustPartGenTargetMultiplier()))
+        );
+
+        panel.setEnabled(
+            getComboPartGenerationMethod()
+                .getSelectedItem() != PartGenerationMethod.CUSTOM);
+        return panel;
+    }
     private JPanel createSparesPanel() {
         // Initialize Labels Used in ActionListeners
         final JLabel lblNumberReloadsPerWeapon = new JLabel();
@@ -180,9 +247,11 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
         });
 
         getComboPartGenerationMethod().addActionListener(evt -> {
-            final boolean enabled = getComboPartGenerationMethod().isEnabled() && getComboPartGenerationMethod().getSelectedItem() != PartGenerationMethod.DISABLED;
-            getChkPayForParts().setEnabled(enabled);
+            final boolean enablePartPayment = getComboPartGenerationMethod().isEnabled() && getComboPartGenerationMethod().getSelectedItem() != PartGenerationMethod.DISABLED;
+            getChkPayForParts().setEnabled(enablePartPayment);
+            getCustomPartGeneratorOptionsPanel().setEnabled(getComboPartGenerationMethod().getSelectedItem() == PartGenerationMethod.CUSTOM);
         });
+        setCustomPartGeneratorOptionsPanel(createCustomPartGeneratorOptionsPanel());
 
         final JLabel lblStartingArmourWeight = new JLabel(resources.getString("lblStartingArmourWeight.text"));
         lblStartingArmourWeight.setToolTipText(resources.getString("lblStartingArmourWeight.toolTipText"));
@@ -244,6 +313,8 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
                                 .addComponent(lblPartGenerationMethod)
                                 .addComponent(getComboPartGenerationMethod(), Alignment.LEADING))
                         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                            .addComponent(getCustomPartGeneratorOptionsPanel(), Alignment.LEADING))
+                        .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                                 .addComponent(lblStartingArmourWeight)
                                 .addComponent(getSpnStartingArmourWeight(), Alignment.LEADING))
                         .addComponent(getChkGenerateSpareAmmunition())
@@ -258,6 +329,8 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
                         .addGroup(layout.createSequentialGroup()
                                 .addComponent(lblPartGenerationMethod)
                                 .addComponent(getComboPartGenerationMethod()))
+                        .addGroup(layout.createSequentialGroup())
+                                .addComponent(getCustomPartGeneratorOptionsPanel())
                         .addGroup(layout.createSequentialGroup()
                                 .addComponent(lblStartingArmourWeight)
                                 .addComponent(getSpnStartingArmourWeight()))
@@ -267,7 +340,6 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
                                 .addComponent(getSpnNumberReloadsPerWeapon()))
                         .addComponent(getChkGenerateFractionalMachineGunAmmunition())
         );
-
         return panel;
     }
 
@@ -351,18 +423,18 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     /**
      * Sets the options for this panel to the default for the selected CompanyGenerationMethod
      */
-    public void setOptions() {
-        setOptions(new SparePartsGenerationOptions());
+    public void setOptions(final PartGenerationMethod partGenerationMethod) {
+        setOptions(new InventoryGenerationOptions(partGenerationMethod));
     }
 
     /**
      * Sets the options for this panel based on the provided CompanyGenerationOptions
      * @param options the CompanyGenerationOptions to use
      */
-    public void setOptions(final SparePartsGenerationOptions options) {
+    public void setOptions(final InventoryGenerationOptions options) {
         // Spares
         getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
-        getSpnStartingArmourWeight().setValue(options.getStartingArmourWeight());
+        getSpnStartingArmourWeight().setValue(options.getTargetArmourWeight());
         if (getChkGenerateSpareAmmunition().isSelected() != options.isGenerateSpareAmmunition()) {
             getChkGenerateSpareAmmunition().doClick();
         }
@@ -378,12 +450,15 @@ public class SparePartsGenerationOptionsPanel extends AbstractMHQScrollablePanel
     /**
      * @return the CompanyGenerationOptions created from the current panel
      */
-    public SparePartsGenerationOptions createOptionsFromPanel() {
-        final SparePartsGenerationOptions options = new SparePartsGenerationOptions();
+    public InventoryGenerationOptions createOptionsFromPanel() {
+        final InventoryGenerationOptions options = new InventoryGenerationOptions(getComboPartGenerationMethod().getSelectedItem());
 
-        // Spares
-        options.setPartGenerationMethod(getComboPartGenerationMethod().getSelectedItem());
-        options.setStartingArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
+    // Custom Part Generator
+//        options.getCustomPartGeneratorOptions().setSparePartTargetMultiplier((Double) getSpnCustPartGenTargetMultiplier().getValue());
+
+    // Spares
+        options.setCustomPartGeneratorOptions(getCustomPartGeneratorOptionsPanel().createOptionsFromPanel());
+        options.setTargetArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
         options.setGenerateSpareAmmunition(getChkGenerateSpareAmmunition().isSelected());
         options.setNumberReloadsPerWeapon((Integer) getSpnNumberReloadsPerWeapon().getValue());
         options.setGenerateFractionalMachineGunAmmunition(getChkGenerateFractionalMachineGunAmmunition().isSelected());
