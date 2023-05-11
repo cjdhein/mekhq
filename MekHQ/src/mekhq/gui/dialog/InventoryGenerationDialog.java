@@ -29,6 +29,7 @@ import mekhq.campaign.finances.enums.TransactionType;
 import mekhq.campaign.parts.AmmoStorage;
 import mekhq.campaign.parts.Armor;
 import mekhq.campaign.parts.Part;
+import mekhq.campaign.parts.PartsGenerationResult;
 import mekhq.campaign.unit.Unit;
 import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
 import mekhq.campaign.universe.enums.PartGenerationMethod;
@@ -42,6 +43,7 @@ import javax.swing.*;
 import java.awt.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 
 public class InventoryGenerationDialog extends AbstractMHQValidationButtonDialog {
@@ -120,36 +122,35 @@ public class InventoryGenerationDialog extends AbstractMHQValidationButtonDialog
     @Override
     protected void okAction() {
         final InventoryGenerationOptions options = getInventoryGenerationOptionsPanel().createOptionsFromPanel();
-
-        final AbstractPartGenerator generator = options.getPartGenerationMethod().getGenerator(options.getCustomPartGeneratorOptions());
+        final AbstractPartGenerator generator = options.getPartGenerationMethod().getGenerator();
         final List<Unit> units;
         final List<Part> parts;
         final List<Armor> armour;
         final List<AmmoStorage> ammunition;
+        final Set<PartsGenerationResult> partsGenerationResults;
 
         units = new ArrayList<>(campaign.getUnits());
         if (options.getPartGenerationMethod() != PartGenerationMethod.DISABLED) {
             parts = generator.generate(units, false, false);
-            parts.forEach(p -> campaign.getWarehouse().addPart(p, true));
         } else {
             parts = new ArrayList<>();
         }
-        armour = BasicArmourGenerator.generateArmour(units, options.getTargetArmourWeight());
+        armour = BasicArmourGenerator.generateArmour(units, options.getStartingArmourWeight());
         ammunition = BasicAmmunitionGenerator.generateAmmunition(getCampaign(), units, options.isGenerateSpareAmmunition(),
-            options.isGenerateFractionalMachineGunAmmunition(), options.getNumberReloadsPerWeapon());
+                options.isGenerateFractionalMachineGunAmmunition(), options.getNumberReloadsPerWeapon());
 
-        armour.forEach(a -> campaign.getWarehouse().addPart(a, true));
-        ammunition.forEach(a -> campaign.getWarehouse().addPart(a, true));
+        partsGenerationResults = getPartsGenerationResults(parts, armour, ammunition);
 
-        final Money costs = options.isPayForParts() ? AbstractPartGenerator.calculatePartCosts(parts) : Money.zero()
-            .plus(options.isPayForArmour() ? BasicArmourGenerator.calculateArmourCosts(armour) : Money.zero())
-            .plus(options.isPayForAmmunition() ? BasicAmmunitionGenerator.calculateAmmunitionCosts(ammunition) : Money.zero());
+        new PartsGenerationReportDialog(getFrame(), getCampaign(), true, partsGenerationResults).setVisible(true);
+    }
+    private Set<PartsGenerationResult> getPartsGenerationResults(List<Part> parts, List<Armor> armour, List<AmmoStorage> ammo) {
+        List<Part> allParts = new ArrayList<>();
+        allParts.addAll(parts);
+        allParts.addAll(armour);
+        allParts.addAll(ammo);
 
-        if (!costs.isZero()) {
-            campaign.getFinances().debit(TransactionType.EQUIPMENT_PURCHASE, campaign.getLocalDate(), costs, "Purchase of Spare Parts, Armour and Ammunition");
-        }
-
-        MekHQ.triggerEvent(new OrganizationChangedEvent(getInventoryGenerationOptionsPanel().getCampaign().getForces()));
+        Set<PartsGenerationResult> generationResults = allParts.stream().map(PartsGenerationResult::new).collect(Collectors.toSet());
+        return generationResults;
     }
     @Override
     protected ValidationState validateAction(final boolean display) {
