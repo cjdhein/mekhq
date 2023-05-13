@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with MekHQ. If not, see <http://www.gnu.org/licenses/>.
  */
-package mekhq.campaign.universe.inventoryGeneration;
+package mekhq.campaign.universe.inventoryGenerator;
 
 import megamek.Version;
 import megamek.common.annotations.Nullable;
@@ -35,14 +35,16 @@ import java.nio.charset.StandardCharsets;
 /**
  * @author cjdhein
  */
-public class InventoryGenerationOptions {
+public class InventoryGeneratorOptions {
     //region Variable Declarations
 
     // Spares
     private PartGenerationMethod partGenerationMethod;
     private CustomPartGeneratorOptions customPartGeneratorOptions;
+    private boolean generateArmour;
     private int targetArmourWeight;
     private boolean generateSpareAmmunition;
+
     private int numberReloadsPerWeapon;
     private boolean generateFractionalMachineGunAmmunition;
 
@@ -54,13 +56,14 @@ public class InventoryGenerationOptions {
     //endregion Variable Declarations
 
     //region Constructors
-    public InventoryGenerationOptions(final PartGenerationMethod partGenerationMethod) {
+    public InventoryGeneratorOptions(final PartGenerationMethod partGenerationMethod) {
 
         // Spares
         setPartGenerationMethod(partGenerationMethod);
         setCustomPartGeneratorOptions(new CustomPartGeneratorOptions());
+        setGenerateArmour(false);
         setTargetArmourWeight(60);
-        setGenerateSpareAmmunition(true);
+        setGenerateSpareAmmunition(false);
         setNumberReloadsPerWeapon(4);
         setGenerateFractionalMachineGunAmmunition(true);
 
@@ -89,6 +92,13 @@ public class InventoryGenerationOptions {
         this.customPartGeneratorOptions = customPartGeneratorOptions;
     }
 
+    public boolean isGenerateArmour() {
+        return generateArmour;
+    }
+
+    public void setGenerateArmour(boolean generateArmour) {
+        this.generateArmour = generateArmour;
+    }
     public int getTargetArmourWeight() {
         return targetArmourWeight;
     }
@@ -210,10 +220,10 @@ public class InventoryGenerationOptions {
      * @return the parsed CompanyGenerationOptions, or the default Windchild options if there is an
      * issue parsing the file.
      */
-    public static InventoryGenerationOptions parseFromXML(final @Nullable File file) {
+    public static InventoryGeneratorOptions parseFromXML(final @Nullable File file) {
         if (file == null) {
             LogManager.getLogger().error("Received a null file, returning the default Windchild options");
-            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
+            return new InventoryGeneratorOptions(PartGenerationMethod.WINDCHILD);
         }
         final Element element;
 
@@ -222,15 +232,15 @@ public class InventoryGenerationOptions {
             element = MHQXMLUtility.newSafeDocumentBuilder().parse(is).getDocumentElement();
         } catch (Exception ex) {
             LogManager.getLogger().error("Failed to open file, returning the default Windchild options", ex);
-            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
+            return new InventoryGeneratorOptions(PartGenerationMethod.WINDCHILD);
         }
         element.normalize();
 
         final Version version = new Version(element.getAttribute("version"));
-        final InventoryGenerationOptions options = parseFromXML(element.getChildNodes(), version);
+        final InventoryGeneratorOptions options = parseFromXML(element.getChildNodes(), version);
         if (options == null) {
             LogManager.getLogger().error("Failed to parse file, returning the default Windchild options");
-            return new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
+            return new InventoryGeneratorOptions(PartGenerationMethod.WINDCHILD);
         } else {
             return options;
         }
@@ -241,8 +251,8 @@ public class InventoryGenerationOptions {
      * @param version the Version of the XML to parse from
      * @return the parsed company generation options, or null if the parsing fails
      */
-    public static @Nullable InventoryGenerationOptions parseFromXML(final NodeList nl,
-                                                                    final Version version) {
+    public static @Nullable InventoryGeneratorOptions parseFromXML(final NodeList nl,
+                                                                   final Version version) {
         if (MHQConstants.VERSION.isLowerThan(version)) {
             LogManager.getLogger().error(String.format(
                     "Cannot parse Company Generation Options from %s in older version %s.",
@@ -250,7 +260,7 @@ public class InventoryGenerationOptions {
             return null;
         }
 
-        final InventoryGenerationOptions options = new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD);
+        final InventoryGeneratorOptions options = new InventoryGeneratorOptions(PartGenerationMethod.WINDCHILD);
         try {
             for (int x = 0; x < nl.getLength(); x++) {
                 final Node wn = nl.item(x);
@@ -294,5 +304,7 @@ public class InventoryGenerationOptions {
 
         return options;
     }
+
+
     //endregion File IO
 }

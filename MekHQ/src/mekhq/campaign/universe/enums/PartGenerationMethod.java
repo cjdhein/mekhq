@@ -19,7 +19,6 @@
 package mekhq.campaign.universe.enums;
 
 import mekhq.MekHQ;
-import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
 import mekhq.campaign.universe.generators.partGenerators.*;
 import org.apache.logging.log4j.LogManager;
 
@@ -89,7 +88,7 @@ public enum PartGenerationMethod {
     }
     //endregion Boolean Comparison Methods
 
-    public AbstractPartGenerator getGenerator(CustomPartGeneratorOptions options) {
+    public AbstractPartGenerator getGenerator() {
         switch (this) {
             case MISHRA:
                 return new MishraPartGenerator();
@@ -100,13 +99,19 @@ public enum PartGenerationMethod {
             case TRIPLE:
                 return new MultiplePartGenerator(this, 3);
             case CUSTOM:
-                return new CustomPartGenerator(this, options);
             case DISABLED:
-                LogManager.getLogger().error("Attempted to get a generator when the part generator is Disabled. Returning Windchild");
+                LogManager.getLogger().error("Attempted to get a generator when the part generator is disabled or attempted to get a Custom generator without options passed. Returning Windchild");
             case WINDCHILD:
             default:
                 return new WindchildPartGenerator();
         }
+    }
+
+    public AbstractPartGenerator getGenerator(CustomPartGeneratorOptions options) {
+        if (this == PartGenerationMethod.CUSTOM) {
+            return new CustomPartGenerator(this, options);
+        }
+        return getGenerator();
     }
 
     @Override

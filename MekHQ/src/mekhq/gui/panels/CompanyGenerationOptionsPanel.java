@@ -113,7 +113,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     private JCheckBox chkGenerateMothballedSpareUnits;
     private JSpinner spnSparesPercentOfActiveUnits;
 
-    private InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel;
+    private InventoryGeneratorOptionsPanel inventoryGeneratorOptionsPanel;
     private MMComboBox<PartGenerationMethod> comboPartGenerationMethod;
     private JSpinner spnStartingArmourWeight;
     private JCheckBox chkGenerateSpareAmmunition;
@@ -581,12 +581,12 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         this.spnSparesPercentOfActiveUnits = spnSparesPercentOfActiveUnits;
     }
 
-    public InventoryGenerationOptionsPanel getInventoryGenerationOptionsPanel() {
-        return inventoryGenerationOptionsPanel;
+    public InventoryGeneratorOptionsPanel getInventoryGeneratorOptionsPanel() {
+        return inventoryGeneratorOptionsPanel;
     }
 
-    public void setInventoryGenerationOptionsPanel(InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel) {
-        this.inventoryGenerationOptionsPanel = inventoryGenerationOptionsPanel;
+    public void setInventoryGeneratorOptionsPanel(InventoryGeneratorOptionsPanel inventoryGeneratorOptionsPanel) {
+        this.inventoryGeneratorOptionsPanel = inventoryGeneratorOptionsPanel;
     }
 
     public MMComboBox<PartGenerationMethod> getComboPartGenerationMethod() {
@@ -792,7 +792,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
     //region Initialization
     @Override
     protected void initialize() {
-        setInventoryGenerationOptionsPanel(new InventoryGenerationOptionsPanel(getFrame(), getCampaign(), null));
+        setInventoryGeneratorOptionsPanel(new InventoryGeneratorOptionsPanel(getFrame(), getCampaign(), null));
 
         final GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridx = 0;
@@ -1552,7 +1552,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
                     .addComponent(lblSparesPercentOfActiveUnits)
                     .addComponent(getSpnSparesPercentOfActiveUnits(), Alignment.LEADING))
                 .addGroup(layout.createParallelGroup(Alignment.BASELINE)
-                    .addComponent(getInventoryGenerationOptionsPanel())
+                    .addComponent(getInventoryGeneratorOptionsPanel())
                 )
         );
 
@@ -1563,7 +1563,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
                     .addComponent(lblSparesPercentOfActiveUnits)
                     .addComponent(getSpnSparesPercentOfActiveUnits()))
                 .addGroup(layout.createSequentialGroup()
-                    .addComponent(getInventoryGenerationOptionsPanel())
+                    .addComponent(getInventoryGeneratorOptionsPanel())
                 )
         );
 
@@ -2154,13 +2154,13 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
             getChkGenerateMothballedSpareUnits().doClick();
         }
         getSpnSparesPercentOfActiveUnits().setValue(options.getSparesPercentOfActiveUnits());
-        getInventoryGenerationOptionsPanel().getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
-        getInventoryGenerationOptionsPanel().getSpnStartingArmourWeight().setValue(options.getStartingArmourWeight());
-        if (getInventoryGenerationOptionsPanel().getChkGenerateSpareAmmunition().isSelected() != options.isGenerateSpareAmmunition()) {
-            getInventoryGenerationOptionsPanel().getChkGenerateSpareAmmunition().doClick();
+        getInventoryGeneratorOptionsPanel().getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
+        getInventoryGeneratorOptionsPanel().getSpnStartingArmourWeight().setValue(options.getStartingArmourWeight());
+        if (getInventoryGeneratorOptionsPanel().getChkGenerateSpareAmmunition().isSelected() != options.isGenerateSpareAmmunition()) {
+            getInventoryGeneratorOptionsPanel().getChkGenerateSpareAmmunition().doClick();
         }
-        getInventoryGenerationOptionsPanel().getSpnNumberReloadsPerWeapon().setValue(options.getNumberReloadsPerWeapon());
-        getInventoryGenerationOptionsPanel().getChkGenerateFractionalMachineGunAmmunition().setSelected(options.isGenerateFractionalMachineGunAmmunition());
+        getInventoryGeneratorOptionsPanel().getSpnNumberReloadsPerWeapon().setValue(options.getNumberReloadsPerWeapon());
+        getInventoryGeneratorOptionsPanel().getChkGenerateFractionalMachineGunAmmunition().setSelected(options.isGenerateFractionalMachineGunAmmunition());
 
         // Contracts
         if (getChkSelectStartingContract().isSelected() != options.isSelectStartingContract()) {
@@ -2280,7 +2280,7 @@ public class CompanyGenerationOptionsPanel extends AbstractMHQScrollablePanel {
         // Spares
         options.setGenerateMothballedSpareUnits(getChkGenerateMothballedSpareUnits().isSelected());
         options.setSparesPercentOfActiveUnits((Integer) getSpnSparesPercentOfActiveUnits().getValue());
-        options.setInventoryGenerationOptions(getInventoryGenerationOptionsPanel().createOptionsFromPanel());
+        options.setInventoryGeneratorOptions(getInventoryGeneratorOptionsPanel().createOptionsFromPanel());
 //        options.setPartGenerationMethod(getComboPartGenerationMethod().getSelectedItem());
 //        options.setStartingArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
 //        options.setGenerateSpareAmmunition(getChkGenerateSpareAmmunition().isSelected());

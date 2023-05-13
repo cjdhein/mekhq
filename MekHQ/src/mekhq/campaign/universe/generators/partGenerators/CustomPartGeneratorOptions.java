@@ -10,7 +10,7 @@ public class CustomPartGeneratorOptions {
 
   //region Constructors
   public CustomPartGeneratorOptions() {
-    setSparePartTargetMultiplier(0.5);
+    setSparePartTargetMultiplier(1d);
   }
   //endregion Constructors
 

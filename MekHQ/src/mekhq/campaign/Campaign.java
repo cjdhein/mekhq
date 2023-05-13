@@ -1745,26 +1745,12 @@ public class Campaign implements ITechManager {
     }
 
     private PartInUse getPartInUse(Part p) {
-        // SI isn't a proper "part"
-        if (p instanceof StructuralIntegrity) {
+        if (PartInUse.isValidForPartInUse(p)) {
+            PartInUse result = new PartInUse(p);
+            return (null != result.getPartToBuy()) ? result : null;
+        } else {
             return null;
         }
-        // Skip out on "not armor" (as in 0 point armer on men or field guns)
-        if ((p instanceof Armor) && ((Armor) p).getType() == EquipmentType.T_ARMOR_UNKNOWN) {
-            return null;
-        }
-        // Makes no sense buying those separately from the chasis
-        if ((p instanceof EquipmentPart)
-                && ((EquipmentPart) p).getType() != null
-                && (((EquipmentPart) p).getType().hasFlag(MiscType.F_CHASSIS_MODIFICATION))) {
-            return null;
-        }
-        // Replace a "missing" part with a corresponding "new" one.
-        if (p instanceof MissingPart) {
-            p = ((MissingPart) p).getNewPart();
-        }
-        PartInUse result = new PartInUse(p);
-        return (null != result.getPartToBuy()) ? result : null;
     }
 
     private void updatePartInUseData(PartInUse piu, Part p) {
@@ -1802,9 +1788,12 @@ public class Campaign implements ITechManager {
     }
 
     public Set<PartInUse> getPartsInUse() {
+        return getPartsInUse(getWarehouse().getParts());
+    }
+    public Set<PartInUse> getPartsInUse(Collection<Part> sourceParts) {
         // java.util.Set doesn't supply a get(Object) method, so we have to use a java.util.Map
         Map<PartInUse, PartInUse> inUse = new HashMap<>();
-        getWarehouse().forEachPart(p -> {
+        sourceParts.forEach(p -> {
             PartInUse piu = getPartInUse(p);
             if (null == piu) {
                 return;

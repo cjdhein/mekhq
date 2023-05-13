@@ -21,9 +21,9 @@
 //import megamek.client.ui.enums.ValidationState;
 //import megamek.common.annotations.Nullable;
 //import mekhq.campaign.Campaign;
-//import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
+//import mekhq.campaign.universe.inventoryGenerator.InventoryGeneratorOptions;
 //import mekhq.gui.baseComponents.AbstractMHQValidationButtonDialog;
-//import mekhq.gui.panels.InventoryGenerationOptionsPanel;
+//import mekhq.gui.panels.InventoryGeneratorOptionsPanel;
 //
 //import javax.swing.*;
 //import java.awt.*;
@@ -31,20 +31,20 @@
 ///**
 // * @author cjdhein
 // */
-//public class InventoryGenerationOptionsDialog extends AbstractMHQValidationButtonDialog {
+//public class InventoryGeneratorOptionsDialog extends AbstractMHQValidationButtonDialog {
 //    //region Variable Declarations
 //    private final Campaign campaign;
-//    private final InventoryGenerationOptions inventoryGenerationOptions;
-//    private InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel;
+//    private final InventoryGeneratorOptions inventoryGeneratorOptions;
+//    private InventoryGeneratorOptionsPanel inventoryGeneratorOptionsPanel;
 //    //endregion Variable Declarations
 //
 //    //region Constructors
-//    public InventoryGenerationOptionsDialog(final JFrame frame, final Campaign campaign,
-//                                            final @Nullable InventoryGenerationOptions inventoryGenerationOptions) {
+//    public InventoryGeneratorOptionsDialog(final JFrame frame, final Campaign campaign,
+//                                            final @Nullable InventoryGeneratorOptions inventoryGeneratorOptions) {
 //        //TODO: Move strings to resources
 //        super(frame, "SparePartsGenerationOptionsDialog", "Generate Spare Parts for The Company");
 //        this.campaign = campaign;
-//        this.inventoryGenerationOptions = inventoryGenerationOptions;
+//        this.inventoryGeneratorOptions = inventoryGeneratorOptions;
 //        initialize();
 //    }
 //    //endregion Constructors
@@ -54,21 +54,21 @@
 //        return campaign;
 //    }
 //
-//    public @Nullable InventoryGenerationOptions getSparePartsGenerationOptions() {
-//        return inventoryGenerationOptions;
+//    public @Nullable InventoryGeneratorOptions getSparePartsGenerationOptions() {
+//        return inventoryGeneratorOptions;
 //    }
-//    public InventoryGenerationOptionsPanel getSparePartsGenerationOptionsPanel() {
-//        return inventoryGenerationOptionsPanel;
+//    public InventoryGeneratorOptionsPanel getSparePartsGenerationOptionsPanel() {
+//        return inventoryGeneratorOptionsPanel;
 //    }
-//    public void setSparePartsGenerationOptionsPanel(final InventoryGenerationOptionsPanel inventoryGenerationOptionsPanel) {
-//        this.inventoryGenerationOptionsPanel = inventoryGenerationOptionsPanel;
+//    public void setSparePartsGenerationOptionsPanel(final InventoryGeneratorOptionsPanel inventoryGeneratorOptionsPanel) {
+//        this.inventoryGeneratorOptionsPanel = inventoryGeneratorOptionsPanel;
 //    }
 //    //endregion Getters/Setters
 //
 //    //region Initialization
 //    @Override
 //    protected Container createCenterPane() {
-//        setSparePartsGenerationOptionsPanel(new InventoryGenerationOptionsPanel(getFrame(), getCampaign(),
+//        setSparePartsGenerationOptionsPanel(new InventoryGeneratorOptionsPanel(getFrame(), getCampaign(),
 //                getSparePartsGenerationOptions()));
 //        return getSparePartsGenerationOptionsPanel();
 //    }
@@ -82,7 +82,7 @@
 //    //endregion Button Actions
 //
 //
-//    public @Nullable InventoryGenerationOptions getSelectedItem() {
+//    public @Nullable InventoryGeneratorOptions getSelectedItem() {
 //        return getResult().isConfirmed() ? getSparePartsGenerationOptionsPanel().createOptionsFromPanel()
 //                : getSparePartsGenerationOptions();
 //    }

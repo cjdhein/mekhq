@@ -18,35 +18,43 @@
  */
 package mekhq.gui.dialog;
 
+import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.parts.Part;
+import mekhq.campaign.parts.PartInUse;
 import mekhq.campaign.parts.PartsGenerationResult;
-import mekhq.gui.CampaignGUI;
+import mekhq.campaign.work.IAcquisitionWork;
 import mekhq.gui.model.PartsGenerationResultsTableModel;
 import mekhq.gui.sorter.FormattedNumberSorter;
 import mekhq.gui.sorter.TwoNumbersSorter;
 
 import javax.swing.*;
+import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
 import java.awt.*;
-import java.util.Collections;
-import java.util.Set;
+import java.util.*;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
- * A dialog to show the resulting parts from an InventoryGeneration run, alongside parts in use, ordered, and in transit.
+ * A dialog to show the resulting parts from an InventoryGenerator run, alongside parts in use, ordered, and in transit.
  */
 public class PartsGenerationReportDialog extends JDialog {
 
     private JPanel overviewPartsPanel;
-    private JTable overviewPartsGenerationResultTable;
+    private JTable overviewPartsGenerationResultsTable;
     private PartsGenerationResultsTableModel overviewPartsModel;
-    private Set<PartsGenerationResult> partsGenerationResults;
+    private Collection<PartsGenerationResult> partsGenerationResults;
     private Campaign campaign;
+    protected ResourceBundle resources;
 
-    public PartsGenerationReportDialog(Frame frame, Campaign campaign, boolean modal, Set<PartsGenerationResult> generationResults) {
+    public PartsGenerationReportDialog(Frame frame, Campaign c, boolean modal, List<PartsGenerationResult> generationResults) {
         super(frame, modal);
-        this.campaign = campaign;
+        campaign = c;
+        this.resources = ResourceBundle.getBundle("mekhq.resources.PartsGenerationResultsTableModel",
+            MekHQ.getMHQOptions().getLocale());
         initComponents();
         partsGenerationResults = generationResults;
         refreshOverviewPartsGenerationResults();
@@ -58,39 +66,40 @@ public class PartsGenerationReportDialog extends JDialog {
         overviewPartsPanel = new JPanel(new BorderLayout());
 
         overviewPartsModel = new PartsGenerationResultsTableModel();
-        overviewPartsGenerationResultTable = new JTable(overviewPartsModel);
-        overviewPartsGenerationResultTable.setRowSelectionAllowed(false);
-        overviewPartsGenerationResultTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
+        overviewPartsGenerationResultsTable = new JTable(overviewPartsModel);
+        overviewPartsGenerationResultsTable.setRowSelectionAllowed(false);
+        overviewPartsGenerationResultsTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         TableColumn column;
-        for (int i = 0; i < overviewPartsModel.getColumnCount(); ++i) {
-            column = overviewPartsGenerationResultTable.getColumnModel().getColumn(i);
-            column.setCellRenderer(overviewPartsModel.getRenderer());
-            if (overviewPartsModel.hasConstantWidth(i)) {
-                column.setMinWidth(overviewPartsModel.getWidth(i));
-                column.setMaxWidth(overviewPartsModel.getWidth(i));
-            } else {
-                column.setPreferredWidth(overviewPartsModel.getPreferredWidth(i));
+        for (int i = 0; i < overviewPartsModel.getColumnCount()-1; ++i) {
+            column = overviewPartsGenerationResultsTable.getColumnModel().getColumn(i);
+                column.setCellRenderer(overviewPartsModel.getRenderer());
             }
-        }
-        overviewPartsGenerationResultTable.setIntercellSpacing(new Dimension(0, 0));
-        overviewPartsGenerationResultTable.setShowGrid(false);
+            overviewPartsGenerationResultsTable.setIntercellSpacing(new Dimension(0, 0));
+            overviewPartsGenerationResultsTable.setShowGrid(false);
         TableRowSorter<PartsGenerationResultsTableModel> partsGenerationResultSorter = new TableRowSorter<>(overviewPartsModel);
         partsGenerationResultSorter.setSortsOnUpdates(true);
         // Numeric columns
         partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_IN_USE, new FormattedNumberSorter());
         partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_STORED, new FormattedNumberSorter());
         partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_TONNAGE, new FormattedNumberSorter());
-        partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_IN_TRANSFER, new TwoNumbersSorter());
+        partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_IN_TRANSFER, new FormattedNumberSorter());
+        partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_PLANNED, new FormattedNumberSorter());
         partsGenerationResultSorter.setComparator(PartsGenerationResultsTableModel.COL_COST, new FormattedNumberSorter());
         // Default starting sort
         partsGenerationResultSorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
-        overviewPartsGenerationResultTable.setRowSorter(partsGenerationResultSorter);
+        overviewPartsGenerationResultsTable.setRowSorter(partsGenerationResultSorter);
 
-        overviewPartsPanel.add(new JScrollPane(overviewPartsGenerationResultTable), BorderLayout.CENTER);
+        overviewPartsPanel.add(new JScrollPane(overviewPartsGenerationResultsTable), BorderLayout.CENTER);
 
         JPanel panButtons = new JPanel(new GridBagLayout());
+        JButton btnAdd = new JButton(resources.getString("btnAdd.text"));
+        btnAdd.addActionListener(evt -> handleAddAction());
+        JButton btnOrder = new JButton(resources.getString("btnOrder.text"));
+        btnOrder.addActionListener(evt -> handleOrderAction());
         JButton btnClose = new JButton("Close");
         btnClose.addActionListener(evt -> setVisible(false));
+        panButtons.add(btnAdd, new GridBagConstraints());
+        panButtons.add(btnOrder, new GridBagConstraints());
         panButtons.add(btnClose, new GridBagConstraints());
         overviewPartsPanel.add(panButtons, BorderLayout.PAGE_END);
 
@@ -99,8 +108,29 @@ public class PartsGenerationReportDialog extends JDialog {
         setPreferredSize(new Dimension(1000, 800));
 
     }
+
+    private void handleAddAction() {
+        Collection<PartsGenerationResult> resultToAcquire = getPartsTaggedForAcquisition();
+        resultToAcquire.forEach(pgr -> campaign.getQuartermaster().addPart((Part) pgr.getPartToBuy().getNewEquipment(), 0));
+        setVisible(false);
+    }
+
+    private void handleOrderAction() {
+        Collection<PartsGenerationResult> resultToAcquire = getPartsTaggedForAcquisition();
+        resultToAcquire.forEach(pgr -> campaign.getShoppingList().addShoppingItem(pgr.getPartToBuy(), pgr.getPlannedCount(),campaign));
+        setVisible(false);
+    }
+
+    private Collection<PartsGenerationResult> getPartsTaggedForAcquisition() {
+        for (int i = 0; i < overviewPartsModel.getRowCount(); i++) {
+            boolean shouldAcquire = (boolean) overviewPartsGenerationResultsTable.getValueAt(i, PartsGenerationResultsTableModel.COL_CHKBX_INCLUDE);
+            overviewPartsModel.getPartsGenerationResult(i).setShouldBeAcquired(shouldAcquire);
+        }
+       return partsGenerationResults.stream().filter(PartsGenerationResult::isShouldBeAcquired).collect(Collectors.toList());
+    }
+
     private void refreshOverviewPartsGenerationResults() {
         overviewPartsModel.setData(partsGenerationResults);
-        TableColumnModel tcm = overviewPartsGenerationResultTable.getColumnModel();
     }
+
 }

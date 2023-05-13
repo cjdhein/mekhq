@@ -13,24 +13,33 @@ public class BasicArmourGenerator {
 
   /**
    * @param units the list of units to generate spare armour based on
+   * @param targetArmourWeight the total armour amount to generate
    * @return the generated armour
    */
-  public static List<Armor> generateArmour(final List<Unit> units, int startingArmourWeight) {
-    if (startingArmourWeight <= 0) {
+  public static List<Armor> generateFromUnits(final List<Unit> units, int targetArmourWeight) {
+    if (targetArmourWeight <= 0) {
       return new ArrayList<>();
     }
-
     final List<Armor> unitAssignedArmour = units.stream()
         .flatMap(unit -> unit.getParts().stream())
         .filter(part -> part instanceof Armor)
         .map(part -> (Armor) part)
         .collect(Collectors.toList());
-    final List<Armor> armour = mergeIdenticalArmour(unitAssignedArmour);
-    final double armourTonnageMultiplier = startingArmourWeight
+    return generate(unitAssignedArmour, targetArmourWeight);
+  }
+
+  /**
+   * @param sourceArmour the list of Armor to generate
+   * @param targetArmourWeight the total armour amount to generate
+   * @return the generated armour
+   */
+  public static List<Armor> generate(final List<Armor> sourceArmour, int targetArmourWeight) {
+    final List<Armor> armour = mergeIdenticalArmour(sourceArmour);
+    final double armourTonnageMultiplier = targetArmourWeight
         / armour.stream().mapToDouble(Armor::getTonnage).sum();
     armour.forEach(a -> a.setAmount(Math.toIntExact(Math.round(a.getAmount() * armourTonnageMultiplier))));
     return armour;
-  }
+  } 
 
   /**
    * This clones and merges armour determined by the custom check below together

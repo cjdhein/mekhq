@@ -32,6 +32,7 @@ import java.io.PrintWriter;
 import java.util.*;
 import java.util.function.Consumer;
 import java.util.function.Predicate;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 /**
@@ -107,6 +108,11 @@ public class Warehouse {
      */
     public Collection<Part> getParts() {
         return parts.values();
+    }
+
+    /** Gets a collection of parts within the warehouse matching the proved name **/
+    public Collection<Part> getParts(String name) {
+        return getParts().stream().filter(p -> Objects.equals(p.getName(), name)).collect(Collectors.toList());
     }
 
     /**
@@ -243,6 +249,19 @@ public class Warehouse {
     }
 
     /**
+     * Checks for an existing part.
+     * @param part The part to search for in the warehouse.
+     * @return The matching part or null if none were found.
+     */
+    public @Nullable Part checkForExistingPart(Part part) {
+        Objects.requireNonNull(part);
+
+        return findPart(p ->
+            (p.getId() != part.getId())
+                && part.isSamePartTypeAndStatus(p));
+    }
+
+    /**
      * Gets a list of spare parts in the warehouse.
      * @return A list of spare parts in the warehouse.
      */
@@ -279,8 +298,21 @@ public class Warehouse {
      *         if no suitable match was found.
      */
     public @Nullable Part findSparePart(Predicate<Part> predicate) {
+        Predicate<Part> isSpare = (Part::isSpare);
+        return findPart(isSpare.and(predicate));
+    }
+
+    /**
+     * Finds the first spare part matching a predicate.
+     *
+     * @param predicate The predicate to use when searching
+     *                  for a suitable spare part.
+     * @return A matching spare {@link Part} or {@code null}
+     *         if no suitable match was found.
+     */
+    public @Nullable Part findPart(Predicate<Part> predicate) {
         for (Part part : getParts()) {
-            if (part.isSpare() && predicate.test(part)) {
+            if (predicate.test(part)) {
                 return part;
             }
         }

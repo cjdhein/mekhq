@@ -23,28 +23,27 @@ import megamek.client.ui.baseComponents.MMComboBox;
 import megamek.client.ui.enums.ValidationState;
 import megamek.common.annotations.Nullable;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.universe.generators.partGenerators.CustomPartGeneratorOptions;
-import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
+import mekhq.campaign.universe.inventoryGenerator.InventoryGeneratorOptions;
 import mekhq.campaign.universe.enums.PartGenerationMethod;
 import mekhq.gui.baseComponents.AbstractMHQScrollablePanel;
 
 import javax.swing.*;
 import javax.swing.GroupLayout.Alignment;
 import java.awt.*;
+import java.util.Objects;
 
 /**
  * @author cjdhein
  */
-public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel {
+public class InventoryGeneratorOptionsPanel extends AbstractMHQScrollablePanel {
     //region Variable Declarations
     private final Campaign campaign;
-    private CustomPartGeneratorOptions customPartGeneratorOptions;
-    private JSpinner spnCustPartGenTargetMultiplier;
     private CustomPartGeneratorOptionsPanel customPartGeneratorOptionsPanel;
 
 
     // Spares
     private MMComboBox<PartGenerationMethod> comboPartGenerationMethod;
+    private JCheckBox chkGenerateArmour;
     private JSpinner spnStartingArmourWeight;
     private JCheckBox chkGenerateSpareAmmunition;
     private JSpinner spnNumberReloadsPerWeapon;
@@ -56,18 +55,14 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
     private JCheckBox chkPayForAmmunition;
 
     //region Constructors
-    public InventoryGenerationOptionsPanel(final JFrame frame, final Campaign campaign,
-                                           final @Nullable InventoryGenerationOptions inventoryGenerationOptions) {
+    public InventoryGeneratorOptionsPanel(final JFrame frame, final Campaign campaign,
+                                           final @Nullable InventoryGeneratorOptions inventoryGeneratorOptions) {
         super(frame, "SparePartsGenerationOptionsPanel", new GridBagLayout());
         this.campaign = campaign;
         setTracksViewportWidth(false);
 
         initialize();
-        if (inventoryGenerationOptions == null) {
-            setOptions(new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD));
-        } else {
-            setOptions(inventoryGenerationOptions);
-        }
+        setOptions(Objects.requireNonNullElseGet(inventoryGeneratorOptions, () -> new InventoryGeneratorOptions(PartGenerationMethod.CUSTOM)));
     }
     //endregion Constructors
 
@@ -92,13 +87,6 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
 //        this.customPartGeneratorOptions = customPartGeneratorOptions;
 //    }
 
-    public JSpinner getSpnCustPartGenTargetMultiplier() {
-        return spnCustPartGenTargetMultiplier;
-    }
-    public void setSpnCustPartGenTargetMultiplier(final JSpinner spnCustPartGenTargetMultiplier) {
-        this.spnCustPartGenTargetMultiplier = spnCustPartGenTargetMultiplier;
-    }
-
     //region Spares
     public MMComboBox<PartGenerationMethod> getComboPartGenerationMethod() {
         return comboPartGenerationMethod;
@@ -108,6 +96,12 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
         this.comboPartGenerationMethod = comboPartGenerationMethod;
     }
 
+    public JCheckBox getChkGenerateArmour() {
+        return chkGenerateArmour;
+    }
+    public void setChkGenerateArmour(JCheckBox chkGenerateArmour) {
+        this.chkGenerateArmour = chkGenerateArmour;
+    }
     public JSpinner getSpnStartingArmourWeight() {
         return spnStartingArmourWeight;
     }
@@ -181,50 +175,10 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
         gbc.gridy++;
         add(createFinancesPanel(), gbc);
     }
-
-    private CustomPartGeneratorOptionsPanel createCustomPartGeneratorOptionsPanel() {
-        // Create Panel Components
-        final JLabel lblSparePartTargetMultiplier = new JLabel(resources.getString("lblSparePartTargetMultiplier.text"));
-        lblSparePartTargetMultiplier.setName("lblSparePartTargetMultiplier");
-        lblSparePartTargetMultiplier.setToolTipText(resources.getString("lblSparePartTargetMultiplier.toolTipText"));
-        setSpnCustPartGenTargetMultiplier(new JSpinner(new SpinnerNumberModel(0.1, 0.0, 100.0, 0.05)));
-        getSpnCustPartGenTargetMultiplier().setToolTipText(resources.getString("lblSparePartTargetMultiplier.toolTipText"));
-        getSpnCustPartGenTargetMultiplier().setName("spnCustPartGenTargetMultiplier");
-        // Programmatically Assign Accessibility Labels
-        lblSparePartTargetMultiplier.setLabelFor(getSpnCustPartGenTargetMultiplier());
-
-        // Layout the UI
-        final CustomPartGeneratorOptionsPanel panel = new CustomPartGeneratorOptionsPanel(getFrame(), getCampaign(), null);
-        panel.setBorder(BorderFactory.createTitledBorder(resources.getString("pnlCustomPartGeneratorOptions.title")));
-        panel.setName("pnlCustomPartGeneratorOptions");
-        final GroupLayout layout = new GroupLayout(panel);
-        panel.setLayout(layout);
-
-        layout.setAutoCreateGaps(true);
-        layout.setAutoCreateContainerGaps(true);
-
-        layout.setVerticalGroup(
-            layout.createSequentialGroup()
-                .addGroup(layout.createParallelGroup(Alignment.BASELINE)
-                    .addComponent(lblSparePartTargetMultiplier)
-                    .addComponent(getSpnCustPartGenTargetMultiplier(), Alignment.LEADING))
-        );
-
-        layout.setHorizontalGroup(
-            layout.createParallelGroup(Alignment.LEADING)
-                .addGroup(layout.createSequentialGroup()
-                    .addComponent(lblSparePartTargetMultiplier)
-                    .addComponent(getSpnCustPartGenTargetMultiplier()))
-        );
-
-        panel.setEnabled(
-            getComboPartGenerationMethod()
-                .getSelectedItem() != PartGenerationMethod.CUSTOM);
-        return panel;
-    }
     private JPanel createSparesPanel() {
         // Initialize Labels Used in ActionListeners
         final JLabel lblNumberReloadsPerWeapon = new JLabel();
+        final JLabel lblStartingArmourWeight = new JLabel(resources.getString("lblStartingArmourWeight.text"));
 
         // Create Panel Components
         final JLabel lblPartGenerationMethod = new JLabel(resources.getString("lblPartGenerationMethod.text"));
@@ -246,22 +200,32 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
             }
         });
 
+        setCustomPartGeneratorOptionsPanel(new CustomPartGeneratorOptionsPanel(getFrame(), getCampaign(), null));
+        getCustomPartGeneratorOptionsPanel().setEnabled(getComboPartGenerationMethod().getSelectedItem() == PartGenerationMethod.CUSTOM);
         getComboPartGenerationMethod().addActionListener(evt -> {
             final boolean enablePartPayment = getComboPartGenerationMethod().isEnabled() && getComboPartGenerationMethod().getSelectedItem() != PartGenerationMethod.DISABLED;
             getChkPayForParts().setEnabled(enablePartPayment);
             getCustomPartGeneratorOptionsPanel().setEnabled(getComboPartGenerationMethod().getSelectedItem() == PartGenerationMethod.CUSTOM);
         });
-        setCustomPartGeneratorOptionsPanel(createCustomPartGeneratorOptionsPanel());
 
-        final JLabel lblStartingArmourWeight = new JLabel(resources.getString("lblStartingArmourWeight.text"));
+        setChkGenerateArmour(new JCheckBox(resources.getString("lblGenerateArmour.text")));
+        getChkGenerateArmour().setName("chkGenerateArmour");
+        getChkGenerateArmour().addActionListener(evt -> {
+            final boolean selected = getChkGenerateArmour().isSelected();
+            lblStartingArmourWeight.setEnabled(selected);
+            getSpnStartingArmourWeight().setEnabled(selected);
+        });
+
+
         lblStartingArmourWeight.setToolTipText(resources.getString("lblStartingArmourWeight.toolTipText"));
         lblStartingArmourWeight.setName("lblStartingArmourWeight");
 
         setSpnStartingArmourWeight(new JSpinner(new SpinnerNumberModel(0, 0, 500, 1)));
         getSpnStartingArmourWeight().setToolTipText(resources.getString("lblStartingArmourWeight.toolTipText"));
         getSpnStartingArmourWeight().setName("spnStartingArmourWeight");
+        getSpnStartingArmourWeight().setEnabled(false);
         getSpnStartingArmourWeight().addChangeListener(evt -> {
-            final boolean enabled = getSpnStartingArmourWeight().isEnabled() && ((Integer) getSpnStartingArmourWeight().getValue()) > 0;
+            final boolean enabled = getSpnStartingArmourWeight().isEnabled() && getChkGenerateArmour().isSelected() && ((Integer) getSpnStartingArmourWeight().getValue()) > 0;
             getChkPayForArmour().setEnabled(enabled);
         });
 
@@ -315,6 +279,7 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
                         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
                             .addComponent(getCustomPartGeneratorOptionsPanel(), Alignment.LEADING))
                         .addGroup(layout.createParallelGroup(Alignment.BASELINE)
+                                .addComponent(getChkGenerateArmour(), Alignment.LEADING)
                                 .addComponent(lblStartingArmourWeight)
                                 .addComponent(getSpnStartingArmourWeight(), Alignment.LEADING))
                         .addComponent(getChkGenerateSpareAmmunition())
@@ -332,6 +297,7 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
                         .addGroup(layout.createSequentialGroup())
                                 .addComponent(getCustomPartGeneratorOptionsPanel())
                         .addGroup(layout.createSequentialGroup()
+                                .addComponent(getChkGenerateArmour())
                                 .addComponent(lblStartingArmourWeight)
                                 .addComponent(getSpnStartingArmourWeight()))
                         .addComponent(getChkGenerateSpareAmmunition())
@@ -424,14 +390,14 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
      * Sets the options for this panel to the default for the selected CompanyGenerationMethod
      */
     public void setOptions(final PartGenerationMethod partGenerationMethod) {
-        setOptions(new InventoryGenerationOptions(partGenerationMethod));
+        setOptions(new InventoryGeneratorOptions(partGenerationMethod));
     }
 
     /**
      * Sets the options for this panel based on the provided CompanyGenerationOptions
      * @param options the CompanyGenerationOptions to use
      */
-    public void setOptions(final InventoryGenerationOptions options) {
+    public void setOptions(final InventoryGeneratorOptions options) {
         // Spares
         getComboPartGenerationMethod().setSelectedItem(options.getPartGenerationMethod());
         getSpnStartingArmourWeight().setValue(options.getTargetArmourWeight());
@@ -450,22 +416,27 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
     /**
      * @return the CompanyGenerationOptions created from the current panel
      */
-    public InventoryGenerationOptions createOptionsFromPanel() {
-        final InventoryGenerationOptions options = new InventoryGenerationOptions(getComboPartGenerationMethod().getSelectedItem());
+    public InventoryGeneratorOptions createOptionsFromPanel() {
+        final InventoryGeneratorOptions options = new InventoryGeneratorOptions(getComboPartGenerationMethod().getSelectedItem());
 
     // Custom Part Generator
 //        options.getCustomPartGeneratorOptions().setSparePartTargetMultiplier((Double) getSpnCustPartGenTargetMultiplier().getValue());
 
     // Spares
         options.setCustomPartGeneratorOptions(getCustomPartGeneratorOptionsPanel().createOptionsFromPanel());
-        options.setTargetArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
+        if (getChkGenerateArmour().isSelected()) {
+            options.setTargetArmourWeight((Integer) getSpnStartingArmourWeight().getValue());
+        } else {
+            options.setTargetArmourWeight(0);
+        }
         options.setGenerateSpareAmmunition(getChkGenerateSpareAmmunition().isSelected());
         options.setNumberReloadsPerWeapon((Integer) getSpnNumberReloadsPerWeapon().getValue());
         options.setGenerateFractionalMachineGunAmmunition(getChkGenerateFractionalMachineGunAmmunition().isSelected());
-    // Finances
-        options.setPayForParts(getChkPayForParts().isSelected());
-        options.setPayForArmour(getChkPayForArmour().isSelected());
-        options.setPayForAmmunition(getChkPayForAmmunition().isSelected());
+
+        // Finances
+        options.setPayForParts(getChkPayForParts().isEnabled() && getChkPayForParts().isSelected());
+        options.setPayForArmour(getChkPayForArmour().isEnabled() && getChkPayForArmour().isSelected());
+        options.setPayForAmmunition(getChkPayForAmmunition().isEnabled() && getChkPayForAmmunition().isSelected());
 
         return options;
     }
@@ -481,6 +452,7 @@ public class InventoryGenerationOptionsPanel extends AbstractMHQScrollablePanel 
         // The options specified are correct, and thus can be saved
         return ValidationState.SUCCESS;
     }
+
     //endregion Options
 
 }

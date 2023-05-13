@@ -1,0 +1,25 @@
+#Client Config Backup
+#Tue Apr 11 17:38:54 CDT 2023
+rs_scale_factor=1
+rs_show_pilot_data=true
+techYear=3028
+rs_show_quirks=true
+techUnofficialNoYear=false
+WINDOWTOP=0
+useTROFormat=true
+rs_scale_units=HEXES
+WINDOWLEFT=0
+WINDOWSTATE=0
+rs_color=true
+techShowFaction=true
+nag_equipment_ctrlclick=false
+skipSafetyPrompts=false
+WINDOWWIDTH=800
+techShowExtinct=false
+techProgression=true
+techUseYear=3028
+Save-Location-Default=/Users/cdhein/repos/general/mekhq/MekHQ/data/mechfiles
+WINDOWHEIGHT=600
+rs_show_era=true
+rs_progress_bar=true
+rs_show_role=true

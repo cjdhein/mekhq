@@ -14,7 +14,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * @author cjdhein
@@ -46,18 +45,14 @@ public class InventoryGenerator {
 
   public List<PartsGenerationResult> netWithCurrentWarehouseQuantities(List<PartsGenerationResult> results) {
     List<PartsGenerationResult> nettedResults = new ArrayList<>();
-    Map<String, List<PartInUse>> currentWarehouseStock = campaign.getPartsInUse().stream()
+    Map<String, List<PartInUse>> currentStock = campaign.getPartsInUse().stream()
         .collect(Collectors.groupingBy(p -> p.getPartToBuy().getAcquisitionName()));
     Map<String, List<PartsGenerationResult>> resultsByPartName = results.stream()
         .collect(Collectors.groupingBy(p -> p.getPartToBuy().getAcquisitionName()));
     resultsByPartName.keySet().forEach(k -> {
+      PartInUse current = currentStock.get(k).get(0);
       PartsGenerationResult target = resultsByPartName.get(k).get(0);
-      if(currentWarehouseStock.containsKey(k)){
-        int inStockAndTransit = currentWarehouseStock.get(k).stream()
-            .flatMap(partInUse -> Stream.of(partInUse.getTransferCount() + partInUse.getStoreCount()))
-            .reduce(0, Integer::sum);
-        target.setPlannedCount(target.getPlannedCount() - inStockAndTransit);
-      }
+      target.setPlannedCount(target.getPlannedCount() - current.getStoreCount() - current.getTransferCount());
       if (target.getPlannedCount() > 0) {
         nettedResults.add(target);
       }

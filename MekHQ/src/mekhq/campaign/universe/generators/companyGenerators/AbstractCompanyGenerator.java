@@ -1300,7 +1300,7 @@ public abstract class AbstractCompanyGenerator {
      */
     public List<Part> generateSpareParts(final List<Unit> units) {
         return getOptions().getPartGenerationMethod().isDisabled() ? new ArrayList<>()
-                : getOptions().getPartGenerationMethod().getGenerator(getOptions().getInventoryGenerationOptions().getCustomPartGeneratorOptions()).generate(units, false, false);
+                : getOptions().getPartGenerationMethod().getGenerator(getOptions().getInventoryGeneratorOptions().getCustomPartGeneratorOptions()).generate(units, false, false);
     }
 
     /**
@@ -1308,7 +1308,7 @@ public abstract class AbstractCompanyGenerator {
      * @return the generated armour
      */
     public List<Armor> generateArmour(final List<Unit> units) {
-        return BasicArmourGenerator.generateArmour(units, getOptions().getStartingArmourWeight());
+        return BasicArmourGenerator.generateFromUnits(units, getOptions().getStartingArmourWeight());
     }
 
     /**

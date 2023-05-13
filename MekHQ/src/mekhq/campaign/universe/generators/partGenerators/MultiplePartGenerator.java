@@ -20,6 +20,7 @@ package mekhq.campaign.universe.generators.partGenerators;
 
 import mekhq.campaign.Warehouse;
 import mekhq.campaign.parts.Part;
+import mekhq.campaign.parts.PartInUse;
 import mekhq.campaign.universe.enums.PartGenerationMethod;
 
 import java.util.List;

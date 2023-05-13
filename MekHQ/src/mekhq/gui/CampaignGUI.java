@@ -964,7 +964,7 @@ public class CampaignGUI extends JPanel {
         //TODO: Move string to resources
         JMenuItem miInventoryGenerator = new JMenuItem(resourceMap.getString("miInventoryGenerator.text"));
         miInventoryGenerator.addActionListener(evt ->
-                new InventoryGenerationDialog(getFrame(), getCampaign()).setVisible(true));
+                new InventoryGeneratorDialog(getFrame(), getCampaign()).setVisible(true));
         menuManage.add(miInventoryGenerator);
 
         menuBar.add(menuManage);

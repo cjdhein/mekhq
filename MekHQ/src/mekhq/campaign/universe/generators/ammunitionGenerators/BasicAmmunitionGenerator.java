@@ -4,10 +4,15 @@ import megamek.common.AmmoType;
 import mekhq.campaign.Campaign;
 import mekhq.campaign.finances.Money;
 import mekhq.campaign.parts.AmmoStorage;
+import mekhq.campaign.parts.Part;
+import mekhq.campaign.parts.PartInUse;
 import mekhq.campaign.parts.equipment.AmmoBin;
 import mekhq.campaign.unit.Unit;
+import mekhq.campaign.universe.inventoryGenerator.InventoryGeneratorOptions;
 
 import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -15,11 +20,29 @@ public class BasicAmmunitionGenerator {
 
   /**
    * @param campaign the campaign to generate ammunition for
-   * @param units the list of units to generate ammunition for
+   * @param source a List of either Units or AmmoBin
+   * @param options a set of InventoryGeneratorOptions
    * @return the generated ammunition
    */
   public static List<AmmoStorage> generateAmmunition(final Campaign campaign,
-                                                     final List<Unit> units,
+                                                     final List<?> source,
+                                                     final InventoryGeneratorOptions options) {
+    return generateAmmunition(campaign, source,
+        options.isGenerateSpareAmmunition(),
+        options.isGenerateFractionalMachineGunAmmunition(),
+        options.getNumberReloadsPerWeapon());
+  }
+
+  /**
+   * @param campaign the campaign to generate ammunition for
+   * @param source a List of either Units or AmmoBin
+   * @param generateSpareAmmunition whether to even generate ammo
+   * @param generateFractionalMachineGunAmmunition should fractional MG ammo be generated
+   * @param numberReloadsPerWeapon number of reloads worth of ammo to generate
+   * @return the generated ammunition
+   */
+  public static List<AmmoStorage> generateAmmunition(final Campaign campaign,
+                                                     final List<?> source,
                                                      boolean generateSpareAmmunition,
                                                      boolean generateFractionalMachineGunAmmunition,
                                                      int numberReloadsPerWeapon) {
@@ -27,13 +50,22 @@ public class BasicAmmunitionGenerator {
         && !generateFractionalMachineGunAmmunition) {
       return new ArrayList<>();
     }
+    final List<AmmoBin> ammoBins = new ArrayList<>();
+    source.forEach(elem -> {
+      if (elem instanceof AmmoBin) {
+        ammoBins.add((AmmoBin) elem);
+      } else if (elem instanceof Unit) {
+        ((Unit) elem).getParts().stream().filter(part -> part instanceof AmmoBin)
+            .forEach(ab -> ammoBins.add((AmmoBin) ab));
+      }
+    });
+    return generate(campaign, ammoBins, generateFractionalMachineGunAmmunition, numberReloadsPerWeapon);
+  }
 
-    final List<AmmoBin> ammoBins = units.stream()
-        .flatMap(unit -> unit.getParts().stream())
-        .filter(part -> part instanceof AmmoBin)
-        .map(part -> (AmmoBin) part)
-        .collect(Collectors.toList());
-
+  private static List<AmmoStorage> generate(final Campaign campaign,
+                                            final List<AmmoBin> ammoBins,
+                                            boolean generateFractionalMachineGunAmmunition,
+                                            int numberReloadsPerWeapon) {
     final List<AmmoStorage> ammunition = new ArrayList<>();
     final boolean generateReloads = numberReloadsPerWeapon > 0;
     ammoBins.forEach(ammoBin -> {

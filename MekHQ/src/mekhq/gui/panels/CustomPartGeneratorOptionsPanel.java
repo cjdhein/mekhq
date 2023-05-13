@@ -18,15 +18,10 @@
  */
 package mekhq.gui.panels;
 
-import megamek.client.ui.baseComponents.JDisableablePanel;
-import megamek.client.ui.baseComponents.MMComboBox;
 import megamek.client.ui.enums.ValidationState;
 import megamek.common.annotations.Nullable;
 import mekhq.campaign.Campaign;
-import mekhq.campaign.CampaignOptions;
-import mekhq.campaign.universe.enums.PartGenerationMethod;
 import mekhq.campaign.universe.generators.partGenerators.CustomPartGeneratorOptions;
-import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
 import mekhq.gui.baseComponents.AbstractMHQScrollablePanel;
 
 import javax.swing.*;
@@ -63,7 +58,7 @@ public class CustomPartGeneratorOptionsPanel extends AbstractMHQScrollablePanel 
         return campaign;
     }
 
-    public JSpinner getSpnSparePartTargetMultiplier() {
+    public JSpinner  getSpnSparePartTargetMultiplier() {
         return spnSparePartTargetMultiplier;
     }
     public void setSpnSparePartTargetMultiplier(final JSpinner spnSparePartTargetMultiplier) {

@@ -24,8 +24,7 @@ import megamek.common.annotations.Nullable;
 import mekhq.MHQConstants;
 import mekhq.campaign.universe.Faction;
 import mekhq.campaign.universe.Factions;
-import mekhq.campaign.universe.generators.partGenerators.CustomPartGeneratorOptions;
-import mekhq.campaign.universe.inventoryGeneration.InventoryGenerationOptions;
+import mekhq.campaign.universe.inventoryGenerator.InventoryGeneratorOptions;
 import mekhq.utilities.MHQXMLUtility;
 import mekhq.campaign.RandomOriginOptions;
 import mekhq.campaign.personnel.enums.PersonnelRole;
@@ -109,7 +108,7 @@ public class CompanyGenerationOptions {
     // Spares
     private boolean generateMothballedSpareUnits;
     private int sparesPercentOfActiveUnits;
-    private InventoryGenerationOptions inventoryGenerationOptions;
+    private InventoryGeneratorOptions inventoryGeneratorOptions;
 
     // Contracts
     private boolean selectStartingContract;
@@ -217,7 +216,7 @@ public class CompanyGenerationOptions {
         getForceWeightLimits().put(60, EntityWeightClass.WEIGHT_ULTRA_LIGHT);
 
         // Spares
-        setInventoryGenerationOptions(new InventoryGenerationOptions(PartGenerationMethod.WINDCHILD));
+        setInventoryGeneratorOptions(new InventoryGeneratorOptions(PartGenerationMethod.WINDCHILD));
         setGenerateMothballedSpareUnits(false);
         setSparesPercentOfActiveUnits(10);
 //        setPartGenerationMethod(PartGenerationMethod.WINDCHILD);
@@ -654,31 +653,31 @@ public class CompanyGenerationOptions {
         this.sparesPercentOfActiveUnits = sparesPercentOfActiveUnits;
     }
 
-    public InventoryGenerationOptions getInventoryGenerationOptions() {
-        return inventoryGenerationOptions;
+    public InventoryGeneratorOptions getInventoryGeneratorOptions() {
+        return inventoryGeneratorOptions;
     }
 
-    public void setInventoryGenerationOptions(InventoryGenerationOptions inventoryGenerationOptions) {
-        this.inventoryGenerationOptions = inventoryGenerationOptions;
+    public void setInventoryGeneratorOptions(InventoryGeneratorOptions inventoryGeneratorOptions) {
+        this.inventoryGeneratorOptions = inventoryGeneratorOptions;
     }
 
     public PartGenerationMethod getPartGenerationMethod() {
-        return getInventoryGenerationOptions().getPartGenerationMethod();
+        return getInventoryGeneratorOptions().getPartGenerationMethod();
     }
 
     public int getStartingArmourWeight() {
-        return getInventoryGenerationOptions().getTargetArmourWeight();
+        return getInventoryGeneratorOptions().getTargetArmourWeight();
     }
     public boolean isGenerateSpareAmmunition() {
-        return getInventoryGenerationOptions().isGenerateSpareAmmunition();
+        return getInventoryGeneratorOptions().isGenerateSpareAmmunition();
     }
 
     public int getNumberReloadsPerWeapon() {
-        return getInventoryGenerationOptions().getNumberReloadsPerWeapon();
+        return getInventoryGeneratorOptions().getNumberReloadsPerWeapon();
     }
 
     public boolean isGenerateFractionalMachineGunAmmunition() {
-        return getInventoryGenerationOptions().isGenerateFractionalMachineGunAmmunition();
+        return getInventoryGeneratorOptions().isGenerateFractionalMachineGunAmmunition();
     }
     //endregion Spares
 
@@ -782,7 +781,7 @@ public class CompanyGenerationOptions {
     }
 
     public boolean isPayForParts() {
-        return getInventoryGenerationOptions().isPayForParts();
+        return getInventoryGeneratorOptions().isPayForParts();
     }
 
 //    public void setPayForParts(final boolean payForParts) {
@@ -790,7 +789,7 @@ public class CompanyGenerationOptions {
 //    }
 
     public boolean isPayForArmour() {
-        return getInventoryGenerationOptions().isPayForArmour();
+        return getInventoryGeneratorOptions().isPayForArmour();
     }
 
 //    public void setPayForArmour(final boolean payForArmour) {
@@ -798,7 +797,7 @@ public class CompanyGenerationOptions {
 //    }
 
     public boolean isPayForAmmunition() {
-        return getInventoryGenerationOptions().isPayForAmmunition();
+        return getInventoryGeneratorOptions().isPayForAmmunition();
     }
 
 //    public void setPayForAmmunition(final boolean payForAmmunition) {
@@ -1227,19 +1226,19 @@ public class CompanyGenerationOptions {
                         options.setSparesPercentOfActiveUnits(Integer.parseInt(wn.getTextContent().trim()));
                         break;
                     case "partGenerationMethod":
-                        options.getInventoryGenerationOptions().setPartGenerationMethod(PartGenerationMethod.valueOf(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setPartGenerationMethod(PartGenerationMethod.valueOf(wn.getTextContent().trim()));
                         break;
                     case "startingArmourWeight":
-                        options.getInventoryGenerationOptions().setTargetArmourWeight(Integer.parseInt(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setTargetArmourWeight(Integer.parseInt(wn.getTextContent().trim()));
                         break;
                     case "generateSpareAmmunition":
-                        options.getInventoryGenerationOptions().setGenerateSpareAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setGenerateSpareAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     case "numberReloadsPerWeapon":
-                        options.getInventoryGenerationOptions().setNumberReloadsPerWeapon(Integer.parseInt(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setNumberReloadsPerWeapon(Integer.parseInt(wn.getTextContent().trim()));
                         break;
                     case "generateFractionalMachineGunAmmunition":
-                        options.getInventoryGenerationOptions().setGenerateFractionalMachineGunAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setGenerateFractionalMachineGunAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     //endregion Spares
 
@@ -1284,13 +1283,13 @@ public class CompanyGenerationOptions {
                         options.setPayForUnits(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     case "payForParts":
-                        options.getInventoryGenerationOptions().setPayForParts(Boolean.parseBoolean(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setPayForParts(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     case "payForArmour":
-                        options.getInventoryGenerationOptions().setPayForArmour(Boolean.parseBoolean(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setPayForArmour(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     case "payForAmmunition":
-                        options.getInventoryGenerationOptions().setPayForAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
+                        options.getInventoryGeneratorOptions().setPayForAmmunition(Boolean.parseBoolean(wn.getTextContent().trim()));
                         break;
                     //endregion Finances
 
