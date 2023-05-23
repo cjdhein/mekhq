@@ -83,7 +83,7 @@ public class PersonViewPanel extends JScrollablePanel {
         setLayout(new GridBagLayout());
         getAccessibleContext().setAccessibleName("Details for " + person.getFullName());
 
-        JPanel pnlPortrait = setPortrait();
+        JPanel pnlPortrait = setPortrait(person);
         GridBagConstraints gbc_pnlPortrait = new GridBagConstraints();
         gbc_pnlPortrait.gridx = 0;
         gbc_pnlPortrait.gridy = 0;
@@ -398,7 +398,7 @@ public class PersonViewPanel extends JScrollablePanel {
      *         <code>null</code> if no portrait was selected or if there was an
      *         error loading it.
      */
-    public JPanel setPortrait() {
+    public static JPanel setPortrait(Person person) {
         JPanel pnlPortrait = new JPanel();
 
         // Panel portrait will include the person picture and the ribbons

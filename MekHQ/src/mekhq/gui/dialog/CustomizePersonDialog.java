@@ -33,6 +33,7 @@ import megamek.common.options.Option;
 import megamek.common.options.OptionsConstants;
 import mekhq.MekHQ;
 import mekhq.campaign.Campaign;
+import mekhq.campaign.event.PersonChangedEvent;
 import mekhq.campaign.personnel.*;
 import mekhq.campaign.personnel.enums.Phenotype;
 import mekhq.campaign.unit.Unit;
@@ -47,6 +48,7 @@ import mekhq.gui.control.EditKillLogControl;
 import mekhq.gui.control.EditScenarioLogControl;
 import mekhq.gui.control.EditPersonnelLogControl;
 import mekhq.gui.utilities.MarkdownEditorPanel;
+import mekhq.gui.view.PersonViewPanel;
 import org.apache.logging.log4j.LogManager;
 
 import javax.swing.*;
@@ -86,6 +88,8 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
     private AbstractMHQScrollablePanel skillsPanel;
     private AbstractMHQScrollablePanel optionsPanel;
     private JTextField textToughness;
+    private JLabel lblPortrait;
+
     private JTextField textPreNominal;
     private JTextField textGivenName;
     private JTextField textSurname;
@@ -93,9 +97,11 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
     private JTextField textNickname;
     private JTextField textBloodname;
     private MarkdownEditorPanel txtBio;
+    DefaultComboBoxModel<Faction> factionsModel;
     private JComboBox<Faction> choiceFaction;
     private JComboBox<PlanetarySystem> choiceSystem;
     private DefaultComboBoxModel<PlanetarySystem> allSystems;
+    DefaultComboBoxModel<Planet> planetsModel;
     private JCheckBox chkOnlyOurFaction;
     private JComboBox<Planet> choicePlanet;
     private JCheckBox chkClan;
@@ -157,6 +163,7 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         JLabel lblNickname = new JLabel();
         JLabel lblBloodname = new JLabel();
         JPanel panName = new JPanel(new GridBagLayout());
+        lblPortrait = new JLabel();
         textNickname = new JTextField();
         textBloodname = new JTextField();
         textToughness = new JTextField();
@@ -178,6 +185,44 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         getContentPane().setLayout(new GridBagLayout());
 
         int y = 1;
+
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 0;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 2;
+        gridBagConstraints.gridwidth = 1;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        gridBagConstraints.insets = new Insets(0, 5, 5, 5);
+
+        JPanel pnlPortrait = new JPanel();
+        pnlPortrait.setName("pnlPortrait");
+        pnlPortrait.setLayout(new GridBagLayout());
+        pnlPortrait.getAccessibleContext().setAccessibleName("Portrait for: " + person.getFullName());
+
+        lblPortrait.setName("lblPortrait");
+        lblPortrait.setIcon(person.getPortrait().getImageIcon(100));
+
+        GridBagConstraints gbc_lblPortrait = new GridBagConstraints();
+        gbc_lblPortrait.gridx = 0;
+        gbc_lblPortrait.gridy = 0;
+        gbc_lblPortrait.fill = GridBagConstraints.NONE;
+        gbc_lblPortrait.anchor = GridBagConstraints.NORTHWEST;
+        gbc_lblPortrait.insets = new Insets(0, 0, 0, 0);
+        pnlPortrait.add(lblPortrait, gbc_lblPortrait);
+
+        panDemog.add(pnlPortrait, gridBagConstraints);
+
+        gridBagConstraints = new GridBagConstraints();
+        gridBagConstraints.gridx = 1;
+        gridBagConstraints.gridy = 0;
+        gridBagConstraints.gridheight = 1;
+        gridBagConstraints.gridwidth = 1;
+        gridBagConstraints.anchor = GridBagConstraints.WEST;
+        gridBagConstraints.insets = new Insets(0, 5, 5, 5);
+        JButton btnRandPortrait = new JButton();
+        btnRandPortrait.setText(resourceMap.getString("btnRandomPortrait.text"));
+        btnRandPortrait.addActionListener(evt -> randomPortrait());
+        panDemog.add(btnRandPortrait, gridBagConstraints);
 
         lblName.setText(resourceMap.getString("lblName.text"));
         lblName.setName("lblName");
@@ -332,9 +377,9 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         gridBagConstraints.gridy = y;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        panDemog.add(new JLabel("Origin Faction:"), gridBagConstraints);
+        panDemog.add(new JLabel(resourceMap.getString("lblOriginFaction.text")), gridBagConstraints);
 
-        DefaultComboBoxModel<Faction> factionsModel = getFactionsComboBoxModel();
+        factionsModel = getFactionsComboBoxModel();
         choiceFaction = new JComboBox<>(factionsModel);
         choiceFaction.setRenderer(new DefaultListCellRenderer() {
             @Override
@@ -378,6 +423,13 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         gridBagConstraints.insets = new Insets(5, 5, 0, 0);
         panDemog.add(choiceFaction, gridBagConstraints);
 
+        JButton btnRandomOrigin = new JButton();
+        btnRandomOrigin.setText(resourceMap.getString("btnRandomOrigin.text"));
+        btnRandomOrigin.setName("btnRandomOrigin");
+        gridBagConstraints.gridx = 2;
+        btnRandomOrigin.addActionListener(evt -> randomOrigin());
+        panDemog.add(btnRandomOrigin, gridBagConstraints);
+
         y++;
 
         gridBagConstraints = new GridBagConstraints();
@@ -385,9 +437,9 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         gridBagConstraints.gridy = y;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        panDemog.add(new JLabel("Origin System:"), gridBagConstraints);
+        panDemog.add(new JLabel(resourceMap.getString("lblOriginSystem.text")), gridBagConstraints);
 
-        DefaultComboBoxModel<Planet> planetsModel = new DefaultComboBoxModel<>();
+        planetsModel = new DefaultComboBoxModel<>();
         choicePlanet = new JComboBox<>(planetsModel);
 
         allSystems = getPlanetarySystemsComboBoxModel();
@@ -431,7 +483,7 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         gridBagConstraints.insets = new Insets(5, 5, 0, 0);
         panDemog.add(choiceSystem, gridBagConstraints);
 
-        chkOnlyOurFaction = new JCheckBox("Faction Specific");
+        chkOnlyOurFaction = new JCheckBox(resourceMap.getString("chkOnlyOurFaction.text"));
         chkOnlyOurFaction.addActionListener(e -> filterPlanetarySystemsForOurFaction(chkOnlyOurFaction.isSelected()));
 
         gridBagConstraints = new GridBagConstraints();
@@ -450,7 +502,7 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         gridBagConstraints.gridy = y;
         gridBagConstraints.anchor = GridBagConstraints.WEST;
         gridBagConstraints.insets = new Insets(0, 5, 0, 0);
-        panDemog.add(new JLabel("Origin Planet:"), gridBagConstraints);
+        panDemog.add(new JLabel(resourceMap.getString("lblOriginPlanet.text")), gridBagConstraints);
 
         choicePlanet.setRenderer(new DefaultListCellRenderer() {
             @Override
@@ -979,6 +1031,14 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         setVisible(false);
     }
 
+    private void randomPortrait() {
+        campaign.assignRandomPortraitFor(person);
+        MekHQ.triggerEvent(new PersonChangedEvent(person));
+        lblPortrait.setIcon(person.getPortrait().getImageIcon(100));
+        lblPortrait.revalidate();
+        lblPortrait.repaint();
+    }
+
     private void randomName() {
         String factionCode = campaign.getCampaignOptions().isUseOriginFactionForNames()
                 ? person.getOriginFaction().getShortName()
@@ -996,6 +1056,13 @@ public class CustomizePersonDialog extends JDialog implements DialogOptionListen
         faction = ((faction != null) && faction.isClan()) ? faction : person.getOriginFaction();
         Bloodname bloodname = Bloodname.randomBloodname(faction.getShortName(), selectedPhenotype, campaign.getGameYear());
         textBloodname.setText((bloodname != null) ? bloodname.getName() : resourceMap.getString("textBloodname.error"));
+    }
+
+    private void randomOrigin() {
+        campaign.assignRandomOriginFor(person);
+        choiceFaction.setSelectedIndex(factionsModel.getIndexOf(person.getOriginFaction()));
+        choicePlanet.setSelectedIndex(planetsModel.getIndexOf(person.getOriginPlanet()));
+        choiceSystem.setSelectedIndex(allSystems.getIndexOf(person.getOriginPlanet().getParentSystem()));
     }
 
     public void refreshSkills() {
