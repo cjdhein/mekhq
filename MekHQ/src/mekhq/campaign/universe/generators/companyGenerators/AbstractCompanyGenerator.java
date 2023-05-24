@@ -1467,7 +1467,7 @@ public abstract class AbstractCompanyGenerator {
         if (getOptions().isPayForSetup()) {
             // Calculate the total costs of setup
             final Money costs = calculateHiringCosts(campaign, trackers)
-                    .plus(calculateUnitCosts(units))
+                .plus(calculateUnitCosts(units))
                     .plus(calculatePartCosts(parts))
                     .plus(calculateArmourCosts(armour))
                     .plus(calculateAmmunitionCosts(ammunition));

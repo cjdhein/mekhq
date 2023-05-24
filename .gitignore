@@ -18,8 +18,6 @@
 /MekHQ/classes/
 /MekHQ/data/images/awards/
 !/MekHQ/data/images/awards/standard/
-/MekHQ/data/images/portraits/Female/
-/MekHQ/data/images/portraits/Male/
 /MekHQ/data/images/temp/
 /MekHQ/data/mechfiles/units.cache
 /MekHQ/data/mechfiles/customs/
@@ -62,3 +60,4 @@
 /settings_local.gradle
 /*.sav.gz
 /.DS_Store
+/MekHQ/data/images/portraits/old/
