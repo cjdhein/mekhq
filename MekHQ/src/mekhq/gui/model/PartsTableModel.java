@@ -149,7 +149,8 @@ public class PartsTableModel extends DataTableModel {
                 return null;
         }
     }
-    public PartsTableModel.Renderer getRenderer() {
+
+    public DefaultTableCellRenderer getRenderer() {
         return new PartsTableModel.Renderer();
     }
 

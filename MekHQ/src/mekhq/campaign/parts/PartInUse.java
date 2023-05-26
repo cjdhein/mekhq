@@ -79,6 +79,9 @@ public class PartInUse {
     }
 
     public int getUseCount() {
+        if (partToBuy instanceof AmmoStorage){
+            return useCount * ((AmmoStorage) partToBuy).shots;
+        }
         return useCount;
     }
 
@@ -95,7 +98,8 @@ public class PartInUse {
     }
 
     public double getStoreTonnage() {
-        return storeCount * tonnagePerItem;
+        if (partToBuy instanceof Armor){
+        return  * tonnagePerItem;
     }
 
     public void setStoreCount(int storeCount) {

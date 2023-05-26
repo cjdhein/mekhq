@@ -1,15 +1,11 @@
 package mekhq.gui.model;
 
 import mekhq.MekHQ;
-import mekhq.campaign.Campaign;
-import mekhq.campaign.parts.Part;
 import mekhq.campaign.parts.PartInUse;
-import mekhq.campaign.parts.PartInventory;
 import mekhq.gui.utilities.MekHqTableCellRenderer;
 
 import javax.swing.*;
 import javax.swing.border.Border;
-import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.TableCellEditor;
 import javax.swing.table.TableCellRenderer;
 import javax.swing.table.TableColumnModel;
@@ -23,8 +19,7 @@ import java.util.ArrayList;
 import java.util.ResourceBundle;
 import java.util.Set;
 
-public class PartsInUseTableModel extends PartsTableModel {
-    private Campaign campaign;
+public class PartsInUseTableModelOld extends DataTableModel {
     private static final DecimalFormat FORMATTER = new DecimalFormat();
     static {
         FORMATTER.setMaximumFractionDigits(3);
@@ -32,22 +27,20 @@ public class PartsInUseTableModel extends PartsTableModel {
     private static final String EMPTY_CELL = "";
 
     public final static int COL_PART = 0;
-    public final static int COL_DETAIL = 1;
-    public final static int COL_IN_USE = 2;
-    public final static int COL_SUPPLY = 3;
-    public final static int COL_TRANSIT = 4;
-    public final static int COL_ORDERED = 5;
-    public final static int COL_COST = 6;
-    public final static int COL_BUTTON_BUY = 7;
-    public final static int COL_BUTTON_BUY_BULK = 8;
-    public final static int COL_BUTTON_GMADD = 9;
-    public final static int COL_BUTTON_GMADD_BULK = 10;
+    public final static int COL_IN_USE = 1;
+    public final static int COL_STORED = 2;
+    public final static int COL_TONNAGE = 3;
+    public final static int COL_IN_TRANSFER  = 4;
+    public final static int COL_COST = 5;
+    public final static int COL_BUTTON_BUY  = 6;
+    public final static int COL_BUTTON_BUY_BULK  = 7;
+    public final static int COL_BUTTON_GMADD  = 8;
+    public final static int COL_BUTTON_GMADD_BULK  = 9;
 
     private final transient ResourceBundle resourceMap = ResourceBundle.getBundle("mekhq.resources.PartsInUseTableModel",
-        MekHQ.getMHQOptions().getLocale());
+            MekHQ.getMHQOptions().getLocale());
 
-    public PartsInUseTableModel(Campaign c) {
-        this.campaign = c;
+    public PartsInUseTableModelOld() {
         data = new ArrayList<PartInUse>();
     }
 
@@ -68,16 +61,14 @@ public class PartsInUseTableModel extends PartsTableModel {
                 return resourceMap.getString("part.heading");
             case COL_IN_USE:
                 return resourceMap.getString("inUse.heading");
-            case COL_SUPPLY:
+            case COL_STORED:
                 return resourceMap.getString("stored.heading");
-            case COL_DETAIL:
+            case COL_TONNAGE:
                 return resourceMap.getString("storedTonnage.heading");
-            case COL_TRANSIT:
-                return resourceMap.getString("transit.heading");
+            case COL_IN_TRANSFER:
+                return resourceMap.getString("ordered.heading");
             case COL_COST:
                 return resourceMap.getString("cost.heading");
-            case COL_ORDERED:
-                return resourceMap.getString("ordered.heading");
             default:
                 return EMPTY_CELL;
         }
@@ -86,39 +77,36 @@ public class PartsInUseTableModel extends PartsTableModel {
     @Override
     public Object getValueAt(int row, int column) {
         PartInUse piu = getPartInUse(row);
-        Part part;
-        PartInventory inventory;
-        if (piu == null) {
-            return EMPTY_CELL;
-        } else {
-            part = piu.getPartToBuy().getAcquisitionPart();
-            inventory = campaign.getPartInventory(part);
-            switch (column) {
-                case COL_PART:
-                    return piu.getDescription();
-                case COL_IN_USE:
-                    return FORMATTER.format(piu.getUseCount());
-                case COL_SUPPLY:
-                    return (inventory.getSupply() > 0) ? FORMATTER.format(inventory.getSupply()) : EMPTY_CELL;
-                case COL_DETAIL:
-                    return (inventory.getSupply() * part.getTonnage() > 0) ? FORMATTER.format(inventory.getSupply() * part.getTonnage()) : EMPTY_CELL;
-                case COL_TRANSIT:
-                    return (inventory.getTransit() > 0) ? FORMATTER.format(inventory.getTransit()) : EMPTY_CELL;
-                case COL_ORDERED:
-                    return (piu.getPlannedCount() > 0) ? FORMATTER.format(piu.getPlannedCount()) : EMPTY_CELL;
-                case COL_COST:
-                    return piu.getCost().toAmountAndSymbolString();
-                case COL_BUTTON_BUY:
-                    return resourceMap.getString("buy.text");
-                case COL_BUTTON_BUY_BULK:
-                    return resourceMap.getString("buyInBulk.text");
-                case COL_BUTTON_GMADD:
-                    return resourceMap.getString("add.text");
-                case COL_BUTTON_GMADD_BULK:
-                    return resourceMap.getString("addInBulk.text");
-                default:
+        switch (column) {
+            case COL_PART:
+                return piu.getDescription();
+            case COL_IN_USE:
+                return FORMATTER.format(piu.getUseCount());
+            case COL_STORED:
+                return (piu.getStoreCount() > 0) ? FORMATTER.format(piu.getStoreCount()) : EMPTY_CELL;
+            case COL_TONNAGE:
+                return (piu.getStoreTonnage() > 0) ? FORMATTER.format(piu.getStoreTonnage()) : EMPTY_CELL;
+            case COL_IN_TRANSFER:
+                if ( piu.getTransferCount() > 0 && piu.getPlannedCount() <= 0 ) {
+                    return FORMATTER.format(piu.getTransferCount());
+                } else if ( piu.getPlannedCount() > 0 ) {
+                    return String.format("%s [+%s]",
+                        FORMATTER.format(piu.getTransferCount()), FORMATTER.format(piu.getPlannedCount()));
+                } else {
                     return EMPTY_CELL;
-            }
+                }
+            case COL_COST:
+                return piu.getCost().toAmountAndSymbolString();
+            case COL_BUTTON_BUY:
+                return resourceMap.getString("buy.text");
+            case COL_BUTTON_BUY_BULK:
+                return resourceMap.getString("buyInBulk.text");
+            case COL_BUTTON_GMADD:
+                return resourceMap.getString("add.text");
+            case COL_BUTTON_GMADD_BULK:
+                return resourceMap.getString("addInBulk.text");
+            default:
+                return EMPTY_CELL;
         }
     }
 
@@ -157,11 +145,6 @@ public class PartsInUseTableModel extends PartsTableModel {
         return (PartInUse) data.get(row);
     }
 
-    @Override
-    public Part getPartAt(int row) {
-        return ((PartInUse) data.get(row)).getPartToBuy().getAcquisitionPart();
-    }
-
     public boolean isBuyable(int row) {
         return (row >= 0) && (row < data.size())
             && (null != ((PartInUse) data.get(row)).getPartToBuy());
@@ -171,7 +154,10 @@ public class PartsInUseTableModel extends PartsTableModel {
         switch (column) {
             case COL_PART:
                 return SwingConstants.LEFT;
-            case COL_DETAIL:
+            case COL_IN_USE:
+            case COL_STORED:
+            case COL_TONNAGE:
+            case COL_IN_TRANSFER:
             case COL_COST:
                 return SwingConstants.RIGHT;
             default:
@@ -182,17 +168,18 @@ public class PartsInUseTableModel extends PartsTableModel {
     public int getPreferredWidth(int column) {
         switch (column) {
             case COL_PART:
-                return 120;
+                return 300;
             case COL_IN_USE:
-            case COL_SUPPLY:
-            case COL_DETAIL:
-            case COL_TRANSIT:
-            case COL_ORDERED:
-                return 20;
+            case COL_STORED:
+            case COL_TONNAGE:
+            case COL_IN_TRANSFER:
             case COL_COST:
-                return 50;
+                return 20;
             case COL_BUTTON_BUY:
+                return 50;
             case COL_BUTTON_GMADD:
+                return 70;
+            case COL_BUTTON_BUY_BULK:
                 return 80;
             default:
                 return 100;
@@ -225,38 +212,21 @@ public class PartsInUseTableModel extends PartsTableModel {
         }
     }
 
-    public DefaultTableCellRenderer getRenderer() {
-        return new PartsInUseTableModel.Renderer();
+    public PartsInUseTableModelOld.Renderer getRenderer() {
+        return new PartsInUseTableModelOld.Renderer();
     }
 
     public static class Renderer extends MekHqTableCellRenderer {
-
-        public static void setupTigerStripes(Component c, JTable table, int row) {
-            Color background = table.getBackground();
-            if (row % 2 != 0) {
-                Color alternateColor = UIManager.getColor("Table.alternateRowColor");
-                if (alternateColor == null) {
-                    // If we don't have an alternate row color, use 'controlHighlight'
-                    // as it is pretty reasonable across the various themes.
-                    alternateColor = UIManager.getColor("controlHighlight");
-                }
-                if (alternateColor != null) {
-                    background = alternateColor;
-                }
-            }
-            c.setForeground(table.getForeground());
-            c.setBackground(background);
-        }
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value,
-                                                       boolean isSelected, boolean hasFocus, int row, int column) {
+                boolean isSelected, boolean hasFocus, int row, int column) {
             super.getTableCellRendererComponent(table, value, isSelected, hasFocus, row, column);
             setOpaque(true);
-            setHorizontalAlignment(((PartsInUseTableModel) table.getModel()).getAlignment(column));
-            setupTigerStripes(this, table, row);
+            setHorizontalAlignment(((PartsInUseTableModelOld) table.getModel()).getAlignment(column));
             return this;
         }
     }
+
     public static class ButtonColumn extends AbstractCellEditor
         implements TableCellRenderer, TableCellEditor, ActionListener, MouseListener {
 
@@ -341,7 +311,7 @@ public class PartsInUseTableModel extends PartsTableModel {
 
         @Override
         public Component getTableCellEditorComponent(JTable table, Object value, boolean isSelected, int row, int column) {
-            boolean buyable = ((PartsInUseTableModel) table.getModel()).isBuyable(table.getRowSorter().convertRowIndexToModel(row));
+            boolean buyable = ((PartsInUseTableModelOld) table.getModel()).isBuyable(table.getRowSorter().convertRowIndexToModel(row));
 
             if (value == null) {
                 editButton.setText(EMPTY_CELL);
@@ -361,11 +331,11 @@ public class PartsInUseTableModel extends PartsTableModel {
 
         @Override
         public Component getTableCellRendererComponent(JTable table, Object value, boolean isSelected, boolean hasFocus, int row, int column) {
-            boolean buyable = ((PartsInUseTableModel) table.getModel()).isBuyable(table.getRowSorter().convertRowIndexToModel(row));
+            boolean buyable = ((PartsInUseTableModelOld) table.getModel()).isBuyable(table.getRowSorter().convertRowIndexToModel(row));
 
             if (isSelected && enabled && buyable) {
                 renderButton.setForeground(table.getSelectionForeground());
-                renderButton.setBackground(table.getSelectionBackground());
+                 renderButton.setBackground(table.getSelectionBackground());
             } else {
                 renderButton.setForeground(table.getForeground());
                 renderButton.setBackground(UIManager.getColor("Button.background"));

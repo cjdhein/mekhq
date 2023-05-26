@@ -19,17 +19,15 @@
 package mekhq.gui.dialog;
 
 import mekhq.campaign.Campaign;
-import mekhq.campaign.parts.*;
+import mekhq.campaign.parts.Part;
+import mekhq.campaign.parts.PartInUse;
 import mekhq.campaign.work.IAcquisitionWork;
 import mekhq.gui.CampaignGUI;
-import mekhq.gui.model.PartsInUseTableModel;
+import mekhq.gui.model.PartsInUseTableModelOld;
 import mekhq.gui.sorter.FormattedNumberSorter;
-import mekhq.gui.sorter.PartsDetailSorter;
 import mekhq.gui.sorter.TwoNumbersSorter;
 
 import javax.swing.*;
-import javax.swing.event.DocumentEvent;
-import javax.swing.event.DocumentListener;
 import javax.swing.table.TableColumn;
 import javax.swing.table.TableColumnModel;
 import javax.swing.table.TableRowSorter;
@@ -41,17 +39,17 @@ import java.util.Collections;
  * A dialog to show parts in use, ordered, in transit with actionable buttons for buying or adding more
  * taken from the Overview tab originally but now a dialog.
  */
-public class PartsReportDialog extends AbstractPartsDialog {
+public class PartsReportDialogOld extends JDialog {
 
     private JPanel overviewPartsPanel;
     private JTable overviewPartsInUseTable;
-    private PartsInUseTableModel overviewPartsModel;
+    private PartsInUseTableModelOld overviewPartsModel;
 
     private Campaign campaign;
     private CampaignGUI gui;
 
-    public PartsReportDialog(CampaignGUI gui, boolean modal) {
-        super(gui.getFrame(), modal, gui);
+    public PartsReportDialogOld(CampaignGUI gui, boolean modal) {
+        super(gui.getFrame(), modal);
         this.gui = gui;
         this.campaign = gui.getCampaign();
         initComponents();
@@ -60,67 +58,10 @@ public class PartsReportDialog extends AbstractPartsDialog {
         setLocationRelativeTo(gui.getFrame());
     }
 
-    protected void initComponents() {
+    private void initComponents() {
         overviewPartsPanel = new JPanel(new BorderLayout());
 
-        GridBagConstraints c = new GridBagConstraints();
-        JPanel panFilter = new JPanel();
-        JLabel lblPartsChoice = new JLabel(resourceMap.getString("lblPartsChoice.text"));
-        DefaultComboBoxModel<String> partsGroupModel = new DefaultComboBoxModel<>();
-        for (int i = 0; i < SG_NUM; i++) {
-            partsGroupModel.addElement(getPartsGroupName(i));
-        }
-        choiceParts = new JComboBox<>(partsGroupModel);
-        choiceParts.setName("choiceParts");
-        choiceParts.setSelectedIndex(0);
-        choiceParts.addActionListener(evt -> filterParts());
-        partsSorter = new TableRowSorter<>(partsModel);
-        partsSorter.setComparator(PartsInUseTableModel.COL_NAME, new PartsDetailSorter());
-        panFilter.setLayout(new GridBagLayout());
-        c.gridx = 0;
-        c.gridy = 0;
-        c.weightx = 0.0;
-        c.anchor = GridBagConstraints.WEST;
-        c.insets = new Insets(5,5,5,5);
-        panFilter.add(lblPartsChoice, c);
-        c.gridx = 1;
-        c.weightx = 1.0;
-        panFilter.add(choiceParts, c);
-
-        JLabel lblFilter = new JLabel(resourceMap.getString("lblFilter.text"));
-        lblFilter.setName("lblFilter");
-        c.gridx = 0;
-        c.gridy = 1;
-        c.weightx = 0.0;
-        panFilter.add(lblFilter, c);
-        txtFilter = new JTextField();
-        txtFilter.setText("");
-        txtFilter.setMinimumSize(new Dimension(200, 28));
-        txtFilter.setName("txtFilter");
-        txtFilter.setPreferredSize(new Dimension(200, 28));
-        txtFilter.getDocument().addDocumentListener(new DocumentListener() {
-            @Override
-            public void changedUpdate(DocumentEvent e) {
-                filterParts();
-            }
-
-            @Override
-            public void insertUpdate(DocumentEvent e) {
-                filterParts();
-            }
-
-            @Override
-            public void removeUpdate(DocumentEvent e) {
-                filterParts();
-            }
-        });
-        c.gridx = 1;
-        c.gridy = 1;
-        c.weightx = 1.0;
-        panFilter.add(txtFilter, c);
-        overviewPartsPanel.add(panFilter, BorderLayout.NORTH);
-
-        overviewPartsModel = new PartsInUseTableModel(campaign);
+        overviewPartsModel = new PartsInUseTableModelOld();
         overviewPartsInUseTable = new JTable(overviewPartsModel);
         overviewPartsInUseTable.setRowSelectionAllowed(false);
         overviewPartsInUseTable.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
@@ -137,22 +78,22 @@ public class PartsReportDialog extends AbstractPartsDialog {
         }
         overviewPartsInUseTable.setIntercellSpacing(new Dimension(0, 0));
         overviewPartsInUseTable.setShowGrid(false);
-        partsSorter = new TableRowSorter<>(overviewPartsModel);
-        partsSorter.setSortsOnUpdates(true);
+        TableRowSorter<PartsInUseTableModelOld> partsInUseSorter = new TableRowSorter<>(overviewPartsModel);
+        partsInUseSorter.setSortsOnUpdates(true);
         // Don't sort the buttons
-        partsSorter.setSortable(PartsInUseTableModel.COL_BUTTON_BUY, false);
-        partsSorter.setSortable(PartsInUseTableModel.COL_BUTTON_BUY_BULK, false);
-        partsSorter.setSortable(PartsInUseTableModel.COL_BUTTON_GMADD, false);
-        partsSorter.setSortable(PartsInUseTableModel.COL_BUTTON_GMADD_BULK, false);
+        partsInUseSorter.setSortable(PartsInUseTableModelOld.COL_BUTTON_BUY, false);
+        partsInUseSorter.setSortable(PartsInUseTableModelOld.COL_BUTTON_BUY_BULK, false);
+        partsInUseSorter.setSortable(PartsInUseTableModelOld.COL_BUTTON_GMADD, false);
+        partsInUseSorter.setSortable(PartsInUseTableModelOld.COL_BUTTON_GMADD_BULK, false);
         // Numeric columns
-        partsSorter.setComparator(PartsInUseTableModel.COL_IN_USE, new FormattedNumberSorter());
-        partsSorter.setComparator(PartsInUseTableModel.COL_SUPPLY, new FormattedNumberSorter());
-        partsSorter.setComparator(PartsInUseTableModel.COL_DETAIL, new FormattedNumberSorter());
-        partsSorter.setComparator(PartsInUseTableModel.COL_TRANSIT, new TwoNumbersSorter());
-        partsSorter.setComparator(PartsInUseTableModel.COL_COST, new FormattedNumberSorter());
+        partsInUseSorter.setComparator(PartsInUseTableModelOld.COL_IN_USE, new FormattedNumberSorter());
+        partsInUseSorter.setComparator(PartsInUseTableModelOld.COL_STORED, new FormattedNumberSorter());
+        partsInUseSorter.setComparator(PartsInUseTableModelOld.COL_TONNAGE, new FormattedNumberSorter());
+        partsInUseSorter.setComparator(PartsInUseTableModelOld.COL_IN_TRANSFER, new TwoNumbersSorter());
+        partsInUseSorter.setComparator(PartsInUseTableModelOld.COL_COST, new FormattedNumberSorter());
         // Default starting sort
-        partsSorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));;
-        overviewPartsInUseTable.setRowSorter(partsSorter);
+        partsInUseSorter.setSortKeys(Collections.singletonList(new RowSorter.SortKey(0, SortOrder.ASCENDING)));
+        overviewPartsInUseTable.setRowSorter(partsInUseSorter);
 
         // Add buttons and actions. TODO: Only refresh the row we are working
         // on, not the whole table
@@ -217,12 +158,12 @@ public class PartsReportDialog extends AbstractPartsDialog {
             }
         };
 
-        new PartsInUseTableModel.ButtonColumn(overviewPartsInUseTable, buy, PartsInUseTableModel.COL_BUTTON_BUY);
-        new PartsInUseTableModel.ButtonColumn(overviewPartsInUseTable, buyInBulk,
-                PartsInUseTableModel.COL_BUTTON_BUY_BULK);
-        new PartsInUseTableModel.ButtonColumn(overviewPartsInUseTable, add, PartsInUseTableModel.COL_BUTTON_GMADD);
-        new PartsInUseTableModel.ButtonColumn(overviewPartsInUseTable, addInBulk,
-                PartsInUseTableModel.COL_BUTTON_GMADD_BULK);
+        new PartsInUseTableModelOld.ButtonColumn(overviewPartsInUseTable, buy, PartsInUseTableModelOld.COL_BUTTON_BUY);
+        new PartsInUseTableModelOld.ButtonColumn(overviewPartsInUseTable, buyInBulk,
+                PartsInUseTableModelOld.COL_BUTTON_BUY_BULK);
+        new PartsInUseTableModelOld.ButtonColumn(overviewPartsInUseTable, add, PartsInUseTableModelOld.COL_BUTTON_GMADD);
+        new PartsInUseTableModelOld.ButtonColumn(overviewPartsInUseTable, addInBulk,
+                PartsInUseTableModelOld.COL_BUTTON_GMADD_BULK);
 
         overviewPartsPanel.add(new JScrollPane(overviewPartsInUseTable), BorderLayout.CENTER);
 
@@ -252,10 +193,10 @@ public class PartsReportDialog extends AbstractPartsDialog {
     private void refreshOverviewPartsInUse() {
         overviewPartsModel.setData(campaign.getPartsInUse());
         TableColumnModel tcm = overviewPartsInUseTable.getColumnModel();
-        PartsInUseTableModel.ButtonColumn column = (PartsInUseTableModel.ButtonColumn) tcm.getColumn(PartsInUseTableModel.COL_BUTTON_GMADD)
+        PartsInUseTableModelOld.ButtonColumn column = (PartsInUseTableModelOld.ButtonColumn) tcm.getColumn(PartsInUseTableModelOld.COL_BUTTON_GMADD)
                 .getCellRenderer();
         column.setEnabled(campaign.isGM());
-        column = (PartsInUseTableModel.ButtonColumn) tcm.getColumn(PartsInUseTableModel.COL_BUTTON_GMADD_BULK).getCellRenderer();
+        column = (PartsInUseTableModelOld.ButtonColumn) tcm.getColumn(PartsInUseTableModelOld.COL_BUTTON_GMADD_BULK).getCellRenderer();
         column.setEnabled(campaign.isGM());
     }
 }
