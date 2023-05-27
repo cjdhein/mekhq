@@ -32,7 +32,7 @@ public class PartsInUseTableModel extends PartsTableModel {
     private static final String EMPTY_CELL = "";
 
     public final static int COL_PART = 0;
-    public final static int COL_DETAIL = 1;
+    public final static int COL_TONNAGE = 1;
     public final static int COL_IN_USE = 2;
     public final static int COL_SUPPLY = 3;
     public final static int COL_TRANSIT = 4;
@@ -70,7 +70,7 @@ public class PartsInUseTableModel extends PartsTableModel {
                 return resourceMap.getString("inUse.heading");
             case COL_SUPPLY:
                 return resourceMap.getString("stored.heading");
-            case COL_DETAIL:
+            case COL_TONNAGE:
                 return resourceMap.getString("storedTonnage.heading");
             case COL_TRANSIT:
                 return resourceMap.getString("transit.heading");
@@ -100,7 +100,7 @@ public class PartsInUseTableModel extends PartsTableModel {
                     return FORMATTER.format(piu.getUseCount());
                 case COL_SUPPLY:
                     return (inventory.getSupply() > 0) ? FORMATTER.format(inventory.getSupply()) : EMPTY_CELL;
-                case COL_DETAIL:
+                case COL_TONNAGE:
                     return (inventory.getSupply() * part.getTonnage() > 0) ? FORMATTER.format(inventory.getSupply() * part.getTonnage()) : EMPTY_CELL;
                 case COL_TRANSIT:
                     return (inventory.getTransit() > 0) ? FORMATTER.format(inventory.getTransit()) : EMPTY_CELL;
@@ -171,7 +171,7 @@ public class PartsInUseTableModel extends PartsTableModel {
         switch (column) {
             case COL_PART:
                 return SwingConstants.LEFT;
-            case COL_DETAIL:
+            case COL_TONNAGE:
             case COL_COST:
                 return SwingConstants.RIGHT;
             default:
@@ -185,7 +185,7 @@ public class PartsInUseTableModel extends PartsTableModel {
                 return 120;
             case COL_IN_USE:
             case COL_SUPPLY:
-            case COL_DETAIL:
+            case COL_TONNAGE:
             case COL_TRANSIT:
             case COL_ORDERED:
                 return 20;

@@ -147,7 +147,7 @@ public class PartsReportDialog extends AbstractPartsDialog {
         // Numeric columns
         partsSorter.setComparator(PartsInUseTableModel.COL_IN_USE, new FormattedNumberSorter());
         partsSorter.setComparator(PartsInUseTableModel.COL_SUPPLY, new FormattedNumberSorter());
-        partsSorter.setComparator(PartsInUseTableModel.COL_DETAIL, new FormattedNumberSorter());
+        partsSorter.setComparator(PartsInUseTableModel.COL_TONNAGE, new FormattedNumberSorter());
         partsSorter.setComparator(PartsInUseTableModel.COL_TRANSIT, new TwoNumbersSorter());
         partsSorter.setComparator(PartsInUseTableModel.COL_COST, new FormattedNumberSorter());
         // Default starting sort
