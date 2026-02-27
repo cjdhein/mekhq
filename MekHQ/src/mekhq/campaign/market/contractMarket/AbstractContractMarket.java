@@ -178,6 +178,15 @@ public abstract class AbstractContractMarket {
     }
 
     /**
+     * Empty specified contracts from the market.
+     *
+     * @param contracts list of contracts to remove
+     */
+    public void removeContracts(List<Contract> contracts) {
+        contracts.forEach(this::removeContract);
+    }
+
+    /**
      * Rerolls a specific clause in a contract, typically as part of a negotiation process. This method adjusts the
      * clause based on the provided clause type and associated modifiers, ensuring the contract reflects updated terms.
      *

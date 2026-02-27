@@ -80,6 +80,8 @@ public class ContractSummaryPanel extends JPanel {
     private int logRerolls;
     private int tranRerolls;
 
+    private final Runnable onContractTermsChanged;
+
     private JPanel mainPanel;
 
     private JTextField txtName;
@@ -102,11 +104,16 @@ public class ContractSummaryPanel extends JPanel {
     private static final int BUTTON_COLUMN = 2;
     //endregion Variable Declarations
 
-
     public ContractSummaryPanel(Contract contract, Campaign campaign, boolean allowRerolls) {
+        this(contract, campaign, allowRerolls, null);
+    }
+
+    public ContractSummaryPanel(Contract contract, Campaign campaign, boolean allowRerolls, Runnable onContractTermsChanged) {
         this.contract = contract;
         this.campaign = campaign;
         this.allowRerolls = allowRerolls;
+        this.onContractTermsChanged = onContractTermsChanged;
+
         ContractMarketMethod method = campaign.getCampaignOptions().getContractMarketMethod();
         if (allowRerolls) {
             if (method == ContractMarketMethod.CAM_OPS) {
@@ -405,6 +412,9 @@ public class ContractSummaryPanel extends JPanel {
                         btn.setEnabled(false);
                     }
                     refreshAmounts();
+                    if (onContractTermsChanged != null) {
+                        onContractTermsChanged.run();
+                    }
                 }
             });
 
@@ -453,6 +463,9 @@ public class ContractSummaryPanel extends JPanel {
                         btn.setEnabled(false);
                     }
                     refreshAmounts();
+                    if (onContractTermsChanged != null) {
+                        onContractTermsChanged.run();
+                    }
                 }
             });
 
@@ -500,6 +513,9 @@ public class ContractSummaryPanel extends JPanel {
                         btn.setEnabled(false);
                     }
                     refreshAmounts();
+                    if (onContractTermsChanged != null) {
+                        onContractTermsChanged.run();
+                    }
                 }
             });
 
@@ -549,6 +565,9 @@ public class ContractSummaryPanel extends JPanel {
                         btn.setEnabled(false);
                     }
                     refreshAmounts();
+                    if (onContractTermsChanged != null) {
+                        onContractTermsChanged.run();
+                    }
                 }
             });
 

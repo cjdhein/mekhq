@@ -43,6 +43,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.ResourceBundle;
@@ -86,7 +87,7 @@ import mekhq.gui.view.ContractSummaryPanel;
  * <p>
  * Code borrowed heavily from PersonnelMarketDialog
  *
- * @author Neoancient
+ * @author Neoanciente
  */
 public class ContractMarketDialog extends JDialog {
     private static final MMLogger LOGGER = MMLogger.create(ContractMarketDialog.class);
@@ -381,12 +382,12 @@ public class ContractMarketDialog extends JDialog {
         };
         tableContracts.setModel(tblContractsModel);
         tableContracts.setName("tableContracts");
-        tableContracts.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+        tableContracts.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         tableContracts.createDefaultColumnsFromModel();
         tableContracts.setAutoResizeMode(JTable.AUTO_RESIZE_ALL_COLUMNS);
         tableContracts.getSelectionModel().addListSelectionListener(evt -> {
             if (!evt.getValueIsAdjusting()) {
-                contractChanged();
+                contractSelectionChanged();
             }
         });
 
@@ -534,12 +535,23 @@ public class ContractMarketDialog extends JDialog {
         btnRemove.setText(resourceMap.getString("btnRemove.text"));
         btnRemove.setName("btnRemove");
         btnRemove.addActionListener(evt -> {
-            if (selectedContract == null) {
+            int[] selectedRows = tableContracts.getSelectedRows();
+            if (selectedRows.length == 0) {
                 return;
             }
-            contractMarket.removeContract(selectedContract);
-            ((DefaultTableModel) tableContracts.getModel()).removeRow(tableContracts.convertRowIndexToModel(
-                  tableContracts.getSelectedRow()));
+            List<Contract> contractsToRemove = new ArrayList<>();
+            for (int viewRow : selectedRows) {
+                int modelRow = tableContracts.convertRowIndexToModel(viewRow);
+                contractsToRemove.add(contractMarket.getContracts().get(modelRow));
+            }
+            for (Contract contract : contractsToRemove) {
+                contractMarket.removeContract(contract);
+            }
+            Arrays.sort(selectedRows);
+            for (int i = selectedRows.length - 1; i >= 0; i--) {
+                ((DefaultTableModel) tableContracts.getModel()).removeRow(tableContracts.convertRowIndexToModel(selectedRows[i]));
+            }
+            tableContracts.clearSelection();
         });
         panelOKButtons.add(btnRemove, new GridBagConstraints());
 
@@ -657,6 +669,19 @@ public class ContractMarketDialog extends JDialog {
         }
     }
 
+    private int getModelColumnIndexByName(String columnName) {
+        if (!(tableContracts.getModel() instanceof DefaultTableModel model)) {
+            return -1;
+        }
+
+        for (int i = 0; i < model.getColumnCount(); i++) {
+            if (columnName.equals(model.getColumnName(i))) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
     /**
      * Displays a confirmation dialog with a message and options to accept or refuse the mission.
      *
@@ -721,26 +746,68 @@ public class ContractMarketDialog extends JDialog {
         setVisible(false);
     }
 
-    private void contractChanged() {
-        int view = tableContracts.getSelectedRow();
-        if (view < 0) {
-            // selection got filtered away
+    private void contractSelectionChanged() {
+        int[] selectedRows = tableContracts.getSelectedRows();
+        if (selectedRows.length != 1) {
             selectedContract = null;
             refreshContractView();
             return;
         }
-        /* preserve the name given to the previous contract (if any) */
+        int view = selectedRows[0];
+        int modelIndex = tableContracts.convertRowIndexToModel(view);
+
+        // Check bounds to prevent IndexOutOfBoundsException during table updates
+        if (modelIndex < 0 || modelIndex >= contractMarket.getContracts().size()) {
+            selectedContract = null;
+            refreshContractView();
+            return;
+        }
+
         if (selectedContract != null && contractView != null) {
             selectedContract.setName(contractView.getContractName());
         }
 
-        selectedContract = contractMarket.getContracts().get(tableContracts.convertRowIndexToModel(view));
+        selectedContract = contractMarket.getContracts().get(modelIndex);
         refreshContractView();
     }
 
+    private void refreshSelectedContractRow() {
+        int viewRow = tableContracts.getSelectedRow();
+        if (viewRow < 0 || selectedContract == null) {
+            return;
+        }
+
+        int modelRow = tableContracts.convertRowIndexToModel(viewRow);
+        DefaultTableModel model = (DefaultTableModel) tableContracts.getModel();
+
+        Integer transportCol = getModelColumnIndexByName("Transport Terms");
+        if (transportCol >= 0) {
+            model.setValueAt(selectedContract.getTransportCompString(), modelRow, transportCol);
+        }
+
+        Integer salvageCol = getModelColumnIndexByName("Salvage Rights");
+        if (salvageCol >= 0) {
+            model.setValueAt(selectedContract.getSalvagePctString(), modelRow, salvageCol);
+        }
+
+        Integer supportCol = getModelColumnIndexByName("Straight Support");
+        if (supportCol >= 0) {
+            model.setValueAt(selectedContract.getStraightSupportString(), modelRow, supportCol);
+        }
+
+        Integer blcCol = getModelColumnIndexByName("Battle Loss Compensation");
+        if (blcCol >= 0) {
+            model.setValueAt(selectedContract.getBattleLossCompString(), modelRow, blcCol);
+        }
+
+        Integer profitCol = getModelColumnIndexByName("Estimated Profit");
+        if (profitCol >= 0) {
+            model.setValueAt(selectedContract.getEstimatedTotalProfit(campaign).toAmountAndSymbolString(), modelRow, profitCol);
+        }
+    }
+
     void refreshContractView() {
-        int row = tableContracts.getSelectedRow();
-        if (row < 0) {
+        if (selectedContract == null) {
             contractView = null;
             scrollContractView.setViewportView(null);
             return;
@@ -750,7 +817,8 @@ public class ContractMarketDialog extends JDialog {
               campaign.getCampaignOptions().isUseAtB() &&
                     selectedContract instanceof AtBContract &&
                     !((AtBContract) selectedContract).isSubcontract() &&
-                    !campaign.isPirateCampaign());
+                    !campaign.isPirateCampaign(),
+              this::refreshSelectedContractRow);
         scrollContractView.setViewportView(contractView);
         // This odd code is to make sure that the scrollbar stays at the top
         // I can't just call it here, because it ends up getting reset somewhere later
